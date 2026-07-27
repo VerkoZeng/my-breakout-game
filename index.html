@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>打砖块 - 我的游戏</title>
+    <style>
+        /* 全局样式，让游戏居中并适配手机 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        .game-wrapper {
+            background: #0f3460;
+            padding: 20px 20px 25px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            max-width: 780px;
+            height: auto;
+            background: #0a0a23;
+            border-radius: 12px;
+            border: 2px solid #e94560;
+            cursor: pointer;
+            touch-action: none; /* 避免触摸时滚动/缩放 */
+        }
+        .info-panel {
+            width: 100%;
+            max-width: 780px;
+            margin-top: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #eee;
+            font-weight: 600;
+            font-size: 1.2rem;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .info-panel span {
+            background: rgba(255, 255, 255, 0.06);
+            padding: 8px 18px;
+            border-radius: 40px;
+            backdrop-filter: blur(2px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .btn {
+            background: #e94560;
+            border: none;
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            padding: 10px 30px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 0 #a02040;
+            letter-spacing: 1px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #a02040;
+        }
+        .btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #a02040;
+        }
+        /* 小屏手机优化 */
+        @media (max-width: 600px) {
+            .game-wrapper { padding: 12px; }
+            .info-panel { font-size: 0.9rem; justify-content: center; }
+            .btn { padding: 8px 20px; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="game-wrapper">
+    <canvas id="gameCanvas" width="780" height="400"></canvas>
+    <div class="info-panel">
+        <span>🏆 分数: <strong id="scoreDisplay">0</strong></span>
+        <span>❤️ 生命: <strong id="livesDisplay">3</strong></span>
+        <button class="btn" id="restartBtn">🔄 重来</button>
+    </div>
+</div>
+
+<script>
+    (function(){
+        // ----- 获取 DOM 元素 -----
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreSpan = document.getElementById('scoreDisplay');
+        const livesSpan = document.getElementById('livesDisplay');
+
+        // ----- 固定尺寸（逻辑像素）-----
+        const CANVAS_W = 780, CANVAS_H = 400;
+
+        // ----- 游戏参数 (可自行调优) -----
+        const PADDLE_WIDTH = 100;
+        const PADDLE_HEIGHT = 14;
+        const BALL_RADIUS = 8;
+        const BALL_SPEED_INIT = 4.8;
+        const BRICK_ROWS = 6;
+        const BRICK_COLS = 8;
+        const BRICK_W = 75;
+        const BRICK_H = 22;
+        const BRICK_GAP = 6;
+        const BRICKS_TOP_OFFSET = 40;
+
+        // ----- 游戏状态变量 -----
+        let paddle = { x: (CANVAS_W - PADDLE_WIDTH) / 2, y: CANVAS_H - 30 };
+        let ball = { x: CANVAS_W/2, y: CANVAS_H - 45, dx: BALL_SPEED_INIT, dy: -BALL_SPEED_INIT };
+        let bricks = [];
+        let score = 0;
+        let lives = 3;
+        let gameActive = true;      // true=运行中, false=游戏结束(失败或胜利)
+        let gameWin = false;
+        let animationId = null;
+
+        // 键盘控制标记
+        let keys = { left: false, right: false };
+
+        // ----- 初始化砖块 -----
+        function initBricks() {
+            const newBricks = [];
+            for (let r = 0; r < BRICK_ROWS; r++) {
+                for (let c = 0; c < BRICK_COLS; c++) {
+                    const x = c * (BRICK_W + BRICK_GAP) + BRICK_GAP/2 + 10;
+                    const y = r * (BRICK_H + BRICK_GAP) + BRICK_GAP/2 + BRICKS_TOP_OFFSET;
+                    // 不同行给不同颜色 (从红到紫)
+                    const hue = 360 - (r / BRICK_ROWS) * 300;
+                    newBricks.push({
+                        x, y,
+                        w: BRICK_W, h: BRICK_H,
+                        alive: true,
+                        color: `hsl(${hue}, 85%, 60%)`
+                    });
+                }
+            }
+            return newBricks;
+        }
+
+        // ----- 重置游戏 (保留生命和分数可重新开始) -----
+        function resetGame() {
+            // 重置挡板
+            paddle.x = (CANVAS_W - PADDLE_WIDTH) / 2;
+            // 重置小球
+            ball.x = CANVAS_W / 2;
+            ball.y = CANVAS_H - 45;
+            // 随机初始方向 (让每次开局不同)
+            const angle = -Math.PI/2 + (Math.random() - 0.5) * 0.8;
+            const speed = BALL_SPEED_INIT;
+            ball.dx = Math.cos(angle) * speed;
+            ball.dy = Math.sin(angle) * speed;
+            // 重置砖块
+            bricks = initBricks();
+            // 重置分数和生命 (如果从结束状态点重来，全部重置)
+            score = 0;
+            lives = 3;
+            gameActive = true;
+            gameWin = false;
+            updateUI();
+        }
+
+        // ----- 碰撞检测: 矩形与矩形 (砖块) -----
+        function rectCollide(r1, r2) {
+            return r1.x < r2.x + r2.w &&
+                   r1.x + r1.w > r2.x &&
+                   r1.y < r2.y + r2.h &&
+                   r1.y + r1.h > r2.y;
+        }
+
+        // ----- 更新游戏逻辑 (每帧) -----
+        function update() {
+            if (!gameActive) return;
+
+            // 1. 键盘控制挡板移动 (左右)
+            if (keys.left && paddle.x > 0) {
+                paddle.x -= 7;
+            }
+            if (keys.right && paddle.x + PADDLE_WIDTH < CANVAS_W) {
+                paddle.x += 7;
+            }
+
+            // 2. 移动小球
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // 3. 边界碰撞 (左右墙)
+            if (ball.x - BALL_RADIUS < 0 || ball.x + BALL_RADIUS > CANVAS_W) {
+                ball.dx = -ball.dx;
+                // 防止卡边
+                ball.x = Math.min(Math.max(ball.x, BALL_RADIUS), CANVAS_W - BALL_RADIUS);
+            }
+            // 上墙
+            if (ball.y - BALL_RADIUS < 0) {
+                ball.dy = -ball.dy;
+                ball.y = BALL_RADIUS;
+            }
+            // 底部 (丢球)
+            if (ball.y + BALL_RADIUS > CANVAS_H) {
+                lives--;
+                updateUI();
+                if (lives <= 0) {
+                    gameActive = false;
+                    gameWin = false;
+                    return;
+                }
+                // 重生小球和挡板
+                ball.x = CANVAS_W / 2;
+                ball.y = CANVAS_H - 45;
+                const angle = -Math.PI/2 + (Math.random() - 0.5) * 0.8;
+                const speed = BALL_SPEED_INIT * (1 + score / 200); // 随分数略加快
+                ball.dx = Math.cos(angle) * speed;
+                ball.dy = Math.sin(angle) * speed;
+                paddle.x = (CANVAS_W - PADDLE_WIDTH) / 2;
+                return;
+            }
+
+            // 4. 挡板碰撞 (精细判定)
+            const paddleRect = {
+                x: paddle.x, y: paddle.y,
+                w: PADDLE_WIDTH, h: PADDLE_HEIGHT
+            };
+            const ballRect = {
+                x: ball.x - BALL_RADIUS, y: ball.y - BALL_RADIUS,
+                w: BALL_RADIUS * 2, h: BALL_RADIUS * 2
+            };
+            if (rectCollide(ballRect, paddleRect)) {
+                // 计算撞击点相对挡板中心的位置 (-1 ~ 1)
+                const hitPos = (ball.x - (paddle.x + PADDLE_WIDTH/2)) / (PADDLE_WIDTH/2);
+                // 限制角度范围 (防止太平)
+                const angle = Math.min(Math.max(hitPos * 0.7, -0.7), 0.7) * Math.PI/2.2;
+                const speed = Math.sqrt(ball.dx*ball.dx + ball.dy*ball.dy);
+                // 新的方向 (向上为负)
+                ball.dx = Math.sin(angle) * speed;
+                ball.dy = -Math.cos(angle) * speed;
+                // 防止卡在挡板内
+                ball.y = paddle.y - BALL_RADIUS - 1;
+            }
+
+            // 5. 砖块碰撞
+            for (let i = 0; i < bricks.length; i++) {
+                const brick = bricks[i];
+                if (!brick.alive) continue;
+                // 砖块矩形
+                const brickRect = { x: brick.x, y: brick.y, w: brick.w, h: brick.h };
+                if (rectCollide(ballRect, brickRect)) {
+                    brick.alive = false;
+                    score++;
+                    updateUI();
+
+                    // 根据碰撞方向反弹 (简单但有效)
+                    // 计算球心与砖块中心的偏移
+                    const cx = ball.x - (brick.x + brick.w/2);
+                    const cy = ball.y - (brick.y + brick.h/2);
+                    // 判断碰撞方向: 哪个方向偏移更大就反弹哪个轴向
+                    if (Math.abs(cx / brick.w) > Math.abs(cy / brick.h)) {
+                        ball.dx = -ball.dx;
+                    } else {
+                        ball.dy = -ball.dy;
+                    }
+                    // 防止卡在砖块内
+                    ball.x += ball.dx * 1.2;
+                    ball.y += ball.dy * 1.2;
+                    break; // 每帧只处理一个砖块碰撞
+                }
+            }
+
+            // 6. 检查胜利条件 (所有砖块都被消除)
+            const anyAlive = bricks.some(b => b.alive);
+            if (!anyAlive) {
+                gameActive = false;
+                gameWin = true;
+            }
+        }
+
+        // ----- 绘制画面 -----
+        function draw() {
+            ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+            // 绘制砖块
+            for (const brick of bricks) {
+                if (!brick.alive) continue;
+                ctx.fillStyle = brick.color;
+                ctx.shadowColor = 'rgba(255,255,200,0.3)';
+                ctx.shadowBlur = 10;
+                ctx.fillRect(brick.x, brick.y, brick.w, brick.h);
+                // 高光效果
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = 'rgba(255,255,255,0.15)';
+                ctx.fillRect(brick.x+2, brick.y+2, brick.w-4, brick.h/3);
+            }
+            // 绘制挡板 (带渐变)
+            const grad = ctx.createLinearGradient(paddle.x, paddle.y, paddle.x, paddle.y+PADDLE_HEIGHT);
+            grad.addColorStop(0, '#e94560');
+            grad.addColorStop(1, '#c23152');
+            ctx.shadowBlur = 18;
+            ctx.shadowColor = '#e94560';
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.roundRect(paddle.x, paddle.y, PADDLE_WIDTH, PADDLE_HEIGHT, 6);
+            ctx.fill();
+            // 绘制小球 (发光效果)
+            ctx.shadowBlur = 25;
+            ctx.shadowColor = '#ffaa88';
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, BALL_RADIUS, 0, Math.PI*2);
+            ctx.fillStyle = '#ffe0c0';
+            ctx.fill();
+            // 小球高光
+            ctx.shadowBlur = 0;
+            ctx.beginPath();
+            ctx.arc(ball.x-2, ball.y-3, 3, 0, Math.PI*2);
+            ctx.fillStyle = 'rgba(255,255,255,0.6)';
+            ctx.fill();
+
+            // 结束画面 (游戏结束或胜利)
+            if (!gameActive) {
+                ctx.shadowBlur = 0;
+                ctx.font = 'bold 42px "Segoe UI", system-ui, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                if (gameWin) {
+                    ctx.fillStyle = '#f6d365';
+                    ctx.shadowColor = '#f6d365';
+                    ctx.shadowBlur = 40;
+                    ctx.fillText('🎉 你赢了!', CANVAS_W/2, CANVAS_H/2 - 30);
+                    ctx.font = '20px sans-serif';
+                    ctx.fillStyle = '#ddd';
+                    ctx.shadowBlur = 0;
+                    ctx.fillText('点击"重来"再玩一局', CANVAS_W/2, CANVAS_H/2 + 40);
+                } else {
+                    ctx.fillStyle = '#e94560';
+                    ctx.shadowColor = '#e94560';
+                    ctx.shadowBlur = 40;
+                    ctx.fillText('💔 游戏结束', CANVAS_W/2, CANVAS_H/2 - 30);
+                    ctx.font = '20px sans-serif';
+                    ctx.fillStyle = '#ddd';
+                    ctx.shadowBlur = 0;
+                    ctx.fillText('点击"重来"继续挑战', CANVAS_W/2, CANVAS_H/2 + 40);
+                }
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        // ----- 辅助: canvas roundRect -----
+        CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+            if (r > w/2) r = w/2;
+            if (r > h/2) r = h/2;
+            this.moveTo(x + r, y);
+            this.lineTo(x + w - r, y);
+            this.quadraticCurveTo(x + w, y, x + w, y + r);
+            this.lineTo(x + w, y + h - r);
+            this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            this.lineTo(x + r, y + h);
+            this.quadraticCurveTo(x, y + h, x, y + h - r);
+            this.lineTo(x, y + r);
+            this.quadraticCurveTo(x, y, x + r, y);
+            this.closePath();
+            return this;
+        };
+
+        // ----- 更新UI (分数 & 生命) -----
+        function updateUI() {
+            scoreSpan.textContent = score;
+            livesSpan.textContent = lives;
+        }
+
+        // ----- 游戏循环 (requestAnimationFrame) -----
+        function gameLoop() {
+            update();
+            draw();
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        // ----- 启动游戏 -----
+        function startGame() {
+            if (animationId) cancelAnimationFrame(animationId);
+            resetGame();
+            gameLoop();
+        }
+
+        // ----- 事件绑定 (键盘 + 按钮) -----
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'Left') {
+                keys.left = true;
+                e.preventDefault();
+            } else if (e.key === 'ArrowRight' || e.key === 'Right') {
+                keys.right = true;
+                e.preventDefault();
+            }
+        });
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'Left') {
+                keys.left = false;
+                e.preventDefault();
+            } else if (e.key === 'ArrowRight' || e.key === 'Right') {
+                keys.right = false;
+                e.preventDefault();
+            }
+        });
+
+        // 移动端触摸控制 (拖拽挡板)
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;   // canvas逻辑宽 / 实际像素宽
+            const touchX = (e.touches[0].clientX - rect.left) * scaleX;
+            // 将挡板中心对准触摸点
+            let newX = touchX - PADDLE_WIDTH/2;
+            newX = Math.min(Math.max(newX, 0), CANVAS_W - PADDLE_WIDTH);
+            paddle.x = newX;
+        }, { passive: false });
+
+        // 鼠标在canvas上移动也可控制 (适合PC)
+        canvas.addEventListener('mousemove', (e) => {
+            if (!gameActive) return;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const mouseX = (e.clientX - rect.left) * scaleX;
+            let newX = mouseX - PADDLE_WIDTH/2;
+            newX = Math.min(Math.max(newX, 0), CANVAS_W - PADDLE_WIDTH);
+            paddle.x = newX;
+        });
+
+        // 重来按钮
+        document.getElementById('restartBtn').addEventListener('click', () => {
+            startGame();
+        });
+
+        // ----- 初始化一切 -----
+        startGame();
+
+    })();
+</script>
+</body>
+</html>
