@@ -1,0 +1,384 @@
+/* ===== G-Tool 全局样式 ===== */
+:root {
+  --primary: #07c160;
+  --primary-dark: #06ad56;
+  --bg: #f5f5f5;
+  --bg-card: #ffffff;
+  --text: #333333;
+  --text-secondary: #666666;
+  --text-light: #999999;
+  --border: #e8e8e8;
+  --danger: #e74c3c;
+  --danger-hover: #c0392b;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font-mono: 'Courier New', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ===== 应用容器 ===== */
+.app-container {
+  max-width: 800px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--bg-card);
+  position: relative;
+}
+
+/* ===== 导航栏 ===== */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #ffffff;
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.navbar-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+.navbar-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--primary);
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.navbar-back:hover { background: #f0f0f0; }
+
+/* ===== 底部 Tab 导航 ===== */
+.tab-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 100;
+  background: #ffffff;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-around;
+  padding: 6px 0;
+  padding-bottom: max(6px, env(safe-area-inset-bottom));
+}
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 12px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--text-light);
+  font-size: 11px;
+  transition: color 0.2s;
+}
+.tab-item.active { color: var(--primary); }
+.tab-item .tab-icon { font-size: 22px; line-height: 1; }
+
+/* ===== 页面区域 ===== */
+.page { display: none; padding: 16px; min-height: 70vh; }
+.page.active { display: block; }
+
+/* ===== 通用组件 ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #f0f0f0;
+  color: var(--text);
+}
+.btn:hover { background: #e0e0e0; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: var(--danger-hover); }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-xs { padding: 2px 8px; font-size: 11px; }
+
+.input, .textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+  background: #fafafa;
+}
+.input:focus, .textarea:focus { border-color: var(--primary); background: #fff; }
+.textarea { min-height: 120px; resize: vertical; }
+
+/* ===== Toast & Modal ===== */
+.toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.toast.show { opacity: 1; }
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.modal-overlay.show { opacity: 1; pointer-events: auto; }
+.modal-box {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 24px;
+  max-width: 320px;
+  width: 90%;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+.modal-box h3 { font-size: 18px; margin-bottom: 12px; }
+.modal-box p { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; }
+.modal-box .modal-actions { display: flex; gap: 12px; justify-content: center; }
+.modal-box input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  margin-bottom: 16px;
+  outline: none;
+}
+.modal-box input:focus { border-color: var(--primary); }
+
+/* ===== 首页导航网格 ===== */
+.home-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0; }
+.home-grid-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 8px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #fafafa;
+  border: 1px solid transparent;
+}
+.home-grid-item:hover { border-color: var(--primary); background: #f0fff4; }
+.home-grid-item .home-grid-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #fff;
+}
+.home-grid-item .home-grid-label { font-size: 12px; color: var(--text-secondary); }
+
+.home-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 20px 0 12px;
+  padding-left: 4px;
+  border-left: 3px solid var(--primary);
+  padding-left: 10px;
+}
+
+/* ===== 游戏通用 ===== */
+.game-container { text-align: center; padding: 0; position: relative; }
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 0;
+}
+.game-info { display: flex; gap: 16px; align-items: center; }
+.game-score { font-size: 24px; font-weight: 700; color: var(--primary); }
+.game-best { font-size: 13px; color: var(--text-light); }
+.game-actions { display: flex; gap: 8px; }
+
+canvas.game-board {
+  border: 2px solid #333;
+  border-radius: 4px;
+  background: #f0d9a0;
+  max-width: 100%;
+  touch-action: none;
+  cursor: pointer;
+}
+
+/* AI 控制 */
+.ai-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+.ai-controls button { min-width: 32px; }
+.ai-controls .diff-display { font-size: 14px; min-width: 60px; text-align: center; font-weight: 600; }
+
+/* ===== 规则弹窗 ===== */
+.rules-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(7,193,96,0.4);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+}
+.rules-btn:hover { opacity: 1; }
+.rules-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 9997;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.rules-panel.show { opacity: 1; pointer-events: auto; }
+.rules-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); }
+.rules-content {
+  position: relative;
+  background: #fef8e7;
+  border-radius: var(--radius);
+  padding: 24px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+}
+.rules-content h3 { font-size: 18px; margin-bottom: 16px; text-align: center; }
+.rules-content p { font-size: 13px; line-height: 1.8; margin-bottom: 8px; color: var(--text-secondary); }
+
+/* ===== 2048 游戏 ===== */
+.game-2048-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  background: #bbada0;
+  padding: 12px;
+  border-radius: 12px;
+  max-width: 360px;
+  margin: 0 auto;
+}
+.game-2048-cell {
+  aspect-ratio: 1;
+  background: #cdc1b4;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: #776e65;
+  transition: all 0.15s;
+}
+.game-2048-cell.n2 { background: #eee4da; }
+.game-2048-cell.n4 { background: #ede0c8; }
+.game-2048-cell.n8 { background: #f2b179; color: #fff; }
+.game-2048-cell.n16 { background: #f59563; color: #fff; }
+.game-2048-cell.n32 { background: #f67c5f; color: #fff; }
+.game-2048-cell.n64 { background: #f65e3b; color: #fff; }
+.game-2048-cell.n128 { background: #edcf72; color: #fff; font-size: 22px; }
+.game-2048-cell.n256 { background: #edcc61; color: #fff; font-size: 22px; }
+.game-2048-cell.n512 { background: #edc850; color: #fff; font-size: 22px; }
+.game-2048-cell.n1024 { background: #edc53f; color: #fff; font-size: 18px; }
+.game-2048-cell.n2048 { background: #edc22e; color: #fff; font-size: 18px; }
+.game-2048-cell.n4096 { background: #3c3a32; color: #fff; font-size: 16px; }
+
+/* ===== 占位页 ===== */
+.placeholder-page { text-align: center; padding: 40px 16px; }
+.placeholder-page img { max-width: 200px; border-radius: var(--radius); margin-bottom: 16px; }
+.placeholder-page p { color: var(--text-light); font-size: 14px; margin: 8px 0; }
+
+/* ===== 棋盘游戏状态 ===== */
+.game-status {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: 16px;
+  background: #f0f7ff;
+  color: #1890ff;
+  display: inline-block;
+}
+.game-status.thinking { animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+/* ===== 国际象棋吃子展示 ===== */
+.captured-pieces { display: flex; gap: 4px; flex-wrap: wrap; margin: 4px 0; }
+.captured-pieces img { width: 20px; height: 20px; }
+
+/* ===== 响应式 ===== */
+@media (max-width: 480px) {
+  .home-grid { grid-template-columns: repeat(4, 1fr); }
+  .game-2048-board { max-width: 100%; }
+}
+
+/* ===== 滚动条 ===== */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+
+/* ===== 版本标记 ===== */
+.version-mark { text-align: center; color: var(--text-light); font-size: 12px; padding: 20px 0; }
