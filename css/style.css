@@ -33,6 +33,7 @@ body {
   min-height: 100vh;
   background: var(--bg-card);
   position: relative;
+  padding-bottom: 60px; /* 为固定底栏留出空间 */
 }
 
 /* ===== 导航栏 ===== */
@@ -42,15 +43,17 @@ body {
   z-index: 100;
   background: #ffffff;
   border-bottom: 1px solid var(--border);
-  padding: 12px 16px;
+  padding: 10px 12px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  height: 48px;
 }
 .navbar-title {
   font-size: 18px;
   font-weight: 600;
   color: var(--text);
+  flex: 1;
+  text-align: center;
 }
 .navbar-back {
   display: inline-flex;
@@ -63,25 +66,49 @@ body {
   background: none;
   padding: 4px 8px;
   border-radius: 6px;
+  min-width: 56px;
 }
 .navbar-back:hover { background: #f0f0f0; }
+.navbar-rules {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 1px 6px rgba(7,193,96,0.35);
+  opacity: 0.9;
+  transition: opacity 0.2s;
+  min-width: 32px;
+}
+.navbar-rules:hover { opacity: 1; }
+.navbar-rules.show { display: flex; }
 
 /* ===== 底部 Tab 导航 ===== */
 .tab-bar {
-  position: sticky;
+  position: fixed;
   bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 800px;
   z-index: 100;
   background: #ffffff;
   border-top: 1px solid var(--border);
   display: flex;
   justify-content: space-around;
-  padding: 6px 0;
-  padding-bottom: max(6px, env(safe-area-inset-bottom));
+  height: 60px;
 }
 .tab-item {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2px;
   padding: 4px 12px;
   cursor: pointer;
@@ -90,6 +117,7 @@ body {
   color: var(--text-light);
   font-size: 11px;
   transition: color 0.2s;
+  min-width: 56px;
 }
 .tab-item.active { color: var(--primary); }
 .tab-item .tab-icon { font-size: 22px; line-height: 1; }
@@ -228,7 +256,7 @@ body {
 }
 
 /* ===== 游戏通用 ===== */
-.game-container { text-align: center; padding: 0; position: relative; }
+.game-container { text-align: center; padding: 0; }
 .game-header {
   display: flex;
   justify-content: space-between;
@@ -381,4 +409,4 @@ canvas.game-board {
 ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
 
 /* ===== 版本标记 ===== */
-.version-mark { text-align: center; color: var(--text-light); font-size: 12px; padding: 20px 0; }
+.version-mark { text-align: center; color: var(--text-light); font-size: 12px; padding: 8px 0 4px; }

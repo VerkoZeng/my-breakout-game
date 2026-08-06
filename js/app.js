@@ -16,6 +16,16 @@ const App = {
   initNavbar() {
     const backBtn = document.getElementById('navbar-back');
     if (backBtn) backBtn.addEventListener('click', () => this.navigateTo('home'));
+
+    const rulesBtn = document.getElementById('navbar-rules');
+    if (rulesBtn) {
+      rulesBtn.addEventListener('click', () => {
+        const page = this.currentPage;
+        if (page === 'chess') ChessChineseModule.toggleRules();
+        else if (page === 'weiqi') ChessGoModule.toggleRules();
+        else if (page === 'intlchess') ChessIntlModule.toggleRules();
+      });
+    }
   },
 
   initTabs() {
@@ -54,6 +64,13 @@ const App = {
     // 返回按钮
     const backBtn = document.getElementById('navbar-back');
     if (backBtn) backBtn.style.display = pageName === 'home' ? 'none' : 'inline-flex';
+
+    // 规则按钮（仅棋盘游戏页显示）
+    const rulesBtn = document.getElementById('navbar-rules');
+    if (rulesBtn) {
+      const gamePages = ['chess', 'weiqi', 'intlchess'];
+      rulesBtn.classList.toggle('show', gamePages.includes(pageName));
+    }
 
     this.currentPage = pageName;
     window.scrollTo(0, 0);
