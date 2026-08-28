@@ -73,17 +73,12 @@ const App = {
       rulesBtn.classList.toggle('show', gamePages.includes(pageName));
     }
 
-    // 灵境 iframe 生命周期：进入时加载、离开时卸载（避免游戏循环在后台空转）
+    // 灵境模块生命周期：进入时初始化并显示初始屏、离开时停止游戏并释放手势守卫
     // 注意：需在 this.currentPage 被覆盖前判断"是否正离开灵境页"
-    const lingjingFrame = document.getElementById('lingjing-frame');
     if (pageName === 'lingjing') {
-      if (lingjingFrame && !lingjingFrame.dataset.loaded) {
-        lingjingFrame.dataset.loaded = '1';
-        lingjingFrame.src = '../game/lingjing/index.html';
-      }
-    } else if (this.currentPage === 'lingjing' && lingjingFrame) {
-      lingjingFrame.dataset.loaded = '';
-      lingjingFrame.src = 'about:blank';
+      if (window.LJ && LJ.app) LJ.app.init();
+    } else if (this.currentPage === 'lingjing' && window.LJ && LJ.app) {
+      LJ.app.leave();
     }
 
     this.currentPage = pageName;

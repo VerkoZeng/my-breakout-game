@@ -1,15 +1,19 @@
 /*! 2048 数字游戏 — Web版 */
 const G2048Module = {
-  state: { board: [], score: 0, bestScore: 0, startX: 0, startY: 0, direction: null },
+  state: { board: [], score: 0, bestScore: 0, startX: 0, startY: 0, direction: null, pointerId: null },
 
   init() {
     this.state.bestScore = App.storage.get('g2048_best') || 0;
     this.reset();
     const el = document.getElementById('game2048-board');
     if (el) {
-      el.addEventListener('touchstart', (e) => this.onTouchStart(e), { passive: true });
-      el.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: true });
-      el.addEventListener('touchend', () => this.onTouchEnd());
+      // ★ 统一指针输入：PC 鼠标拖拽 + 移动端触摸滑动（Pointer Events 兼容两者）
+      el.addEventListener('pointerdown', (e) => this.onPointerDown(e));
+      el.addEventListener('pointermove', (e) => this.onPointerMove(e));
+      el.addEventListener('pointerup', (e) => this.onPointerUp(e));
+      el.addEventListener('pointercancel', (e) => this.onPointerUp(e));
+      // 防 PC 拖拽触发默认行为（选中文本/拖拽图片）
+      el.addEventListener('dragstart', (e) => e.preventDefault());
     }
     document.addEventListener('keydown', (e) => {
       if (App.currentPage !== 'game2048') return;
@@ -23,6 +27,8 @@ const G2048Module = {
   reset() {
     this.state.board = Array(4).fill(null).map(() => Array(4).fill(0));
     this.state.score = 0;
+    this.state.direction = null;
+    this.state.pointerId = null;
     this.addRandomTile();
     this.addRandomTile();
     this.render();
@@ -116,12 +122,27 @@ const G2048Module = {
     return true;
   },
 
-  onTouchStart(e) { const t = e.touches[0]; this.state.startX = t.clientX; this.state.startY = t.clientY; },
-  onTouchMove(e) {
-    const t = e.touches[0];
-    const dx = t.clientX - this.state.startX, dy = t.clientY - this.state.startY;
+  /* ---------- 指针输入（PC 鼠标拖拽 + 移动端触摸滑动） ---------- */
+  onPointerDown(e) {
+    this.state.pointerId = e.pointerId;
+    this.state.startX = e.clientX;
+    this.state.startY = e.clientY;
+    this.state.direction = null;
+    // 捕获指针：拖出棋盘边界仍能跟踪
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) { /* 忽略 */ }
+    // 阻止 PC 拖拽选中文本等默认行为
+    try { e.preventDefault(); } catch (err) { /* 忽略 */ }
+  },
+  onPointerMove(e) {
+    if (e.pointerId !== this.state.pointerId) return;
+    const dx = e.clientX - this.state.startX, dy = e.clientY - this.state.startY;
     if (Math.abs(dx) > Math.abs(dy)) this.state.direction = dx > 50 ? 'right' : dx < -50 ? 'left' : null;
     else this.state.direction = dy > 50 ? 'down' : dy < -50 ? 'up' : null;
   },
-  onTouchEnd() { if (this.state.direction) this.handleMove(this.state.direction); this.state.direction = null; },
+  onPointerUp(e) {
+    if (e.pointerId !== this.state.pointerId) return;
+    this.state.pointerId = null;
+    if (this.state.direction) this.handleMove(this.state.direction);
+    this.state.direction = null;
+  },
 };

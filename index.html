@@ -281,9 +281,62 @@
     </div>
   </div>
 
-  <!-- ===== 灵境页面（iframe 接入 game/lingjing） ===== -->
+  <!-- ===== 灵境页面（代码融合，非 iframe） ===== -->
   <div class="page page-fullscreen" id="page-lingjing">
-    <iframe id="lingjing-frame" title="灵境" src="about:blank"></iframe>
+    <!-- 登录 / 注册（auth.js 动态渲染） -->
+    <section id="screen-auth" class="screen"></section>
+
+    <!-- 主菜单 -->
+    <section id="screen-menu" class="screen hidden">
+      <div class="menu-wrap">
+        <h1 class="title">灵境<span class="title-sub">LINGJING</span></h1>
+        <p class="subtitle">星空无界 · 多边形之战</p>
+        <div id="hero-badge" class="hero-badge"></div>
+        <div class="menu-btns">
+          <button id="btn-start" class="big-btn">开始游戏</button>
+          <button id="btn-edit" class="big-btn ghost">编辑灵境英雄</button>
+          <button id="btn-lb" class="big-btn ghost">排行榜</button>
+          <button id="btn-logout" class="toolbar-btn logout">登出</button>
+        </div>
+        <p class="ctrl-hint">操作：PC 鼠标控制方向、点击或空格冲刺；手机 左手摇杆控制方向、右手点击冲刺（1 秒冷却，按钮显示倒计时）。撞向敌人造成伤害；击杀敌人恢复生命并成长；圆形资源（绿=回血 / 红=+攻击 / 黄=+移速）接触击败即生效，不计入击杀数。</p>
+      </div>
+    </section>
+
+    <!-- 英雄编辑器（heroEditor.js 动态渲染） -->
+    <section id="screen-editor" class="screen hidden"></section>
+
+    <!-- 游戏 -->
+    <section id="screen-game" class="screen hidden">
+      <canvas id="game-canvas"></canvas>
+      <div id="hud">
+        <div class="hud-left">
+          <div class="hp-bar"><div id="hud-hp-fill" class="hp-fill"></div></div>
+          <div id="hud-stats" class="hud-stats"></div>
+        </div>
+        <div id="hud-kills" class="hud-kills">击杀 0</div>
+        <button id="btn-game-back" class="toolbar-btn hud-back">菜单</button>
+        <button id="btn-dash" class="dash-btn">冲刺</button>
+      </div>
+      <div id="gameover" class="overlay hidden">
+        <div class="overlay-box">
+          <h2>阵亡</h2>
+          <p>本局击杀：<b id="go-kills">0</b></p>
+          <div class="overlay-btns">
+            <button id="btn-go-again" class="big-btn">再来一局</button>
+            <button id="btn-go-menu" class="toolbar-btn">返回菜单</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 排行榜 -->
+    <section id="screen-leaderboard" class="screen hidden">
+      <div class="panel">
+        <div class="panel-bar"><span>灵境英雄 · 区排行</span>
+          <button id="btn-lb-back" class="toolbar-btn">返回</button></div>
+        <div id="lb-list" class="lb-list"></div>
+      </div>
+    </section>
   </div>
 
   <!-- ===== 关于/占位页面 ===== -->
@@ -327,6 +380,13 @@
 <script src="js/chess-chinese.js"></script>
 <script src="js/chess-go.js"></script>
 <script src="js/chess-international.js"></script>
+<!-- 灵境（LingJing）融合模块 -->
+<script src="js/lingjing-data.js"></script>
+<script src="js/lingjing-gesture-guard.js"></script>
+<script src="js/lingjing-auth.js"></script>
+<script src="js/lingjing-hero-editor.js"></script>
+<script src="js/lingjing-game.js"></script>
+<script src="js/lingjing-app.js"></script>
 
 </body>
 </html>

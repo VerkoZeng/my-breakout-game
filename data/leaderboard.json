@@ -1,0 +1,7 @@
+{
+  "leaderboard": [
+    { "name": "Nova", "kills": 42, "deaths": 3, "date": "2026-08-10" },
+    { "name": "Echo", "kills": 31, "deaths": 5, "date": "2026-08-12" },
+    { "name": "Rook", "kills": 27, "deaths": 8, "date": "2026-08-15" }
+  ]
+}
