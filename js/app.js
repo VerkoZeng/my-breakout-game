@@ -56,6 +56,7 @@ const App = {
       chess: '枼沄 象棋',
       weiqi: '枼沄 围棋',
       intlchess: '枼沄 国际象棋',
+      lingjing: '枼沄 灵境',
       about: '枼沄 待定'
     };
     const titleEl = document.getElementById('navbar-title');
@@ -72,8 +73,27 @@ const App = {
       rulesBtn.classList.toggle('show', gamePages.includes(pageName));
     }
 
+    // 灵境 iframe 生命周期：进入时加载、离开时卸载（避免游戏循环在后台空转）
+    // 注意：需在 this.currentPage 被覆盖前判断"是否正离开灵境页"
+    const lingjingFrame = document.getElementById('lingjing-frame');
+    if (pageName === 'lingjing') {
+      if (lingjingFrame && !lingjingFrame.dataset.loaded) {
+        lingjingFrame.dataset.loaded = '1';
+        lingjingFrame.src = '../game/lingjing/index.html';
+      }
+    } else if (this.currentPage === 'lingjing' && lingjingFrame) {
+      lingjingFrame.dataset.loaded = '';
+      lingjingFrame.src = 'about:blank';
+    }
+
     this.currentPage = pageName;
     window.scrollTo(0, 0);
+
+    // 灵境页隐藏底部 Tab 栏与版本标记，保证游戏全屏显示
+    const tabBar = document.querySelector('.tab-bar');
+    const versionMark = document.querySelector('.version-mark');
+    if (tabBar) tabBar.style.display = (pageName === 'lingjing') ? 'none' : '';
+    if (versionMark) versionMark.style.display = (pageName === 'lingjing') ? 'none' : '';
 
     // 初始化页面
     if (pageName === 'game2048' && !this._g2048Init) { this._g2048Init = true; G2048Module.init(); }

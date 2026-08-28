@@ -380,6 +380,26 @@ canvas.game-board {
 .placeholder-page img { max-width: 200px; border-radius: var(--radius); margin-bottom: 16px; }
 .placeholder-page p { color: var(--text-light); font-size: 14px; margin: 8px 0; }
 
+/* ===== 灵境全屏页（iframe 接入） ===== */
+.page-fullscreen {
+  position: fixed;
+  top: 48px;   /* 导航栏高度 */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 800px; /* 与应用壳宽度对齐 */
+  bottom: 0;
+  padding: 0;
+  z-index: 50; /* 高于普通内容、低于导航栏 */
+}
+#lingjing-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #000;
+}
+
 /* ===== 棋盘游戏状态 ===== */
 .game-status {
   font-size: 14px;

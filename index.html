@@ -41,6 +41,10 @@
 
     <div class="home-section-title">探索</div>
     <div class="home-grid">
+      <div class="home-grid-item" onclick="App.navigateTo('lingjing')">
+        <div class="home-grid-icon" style="background:#adadad;">✦</div>
+        <div class="home-grid-label">灵境</div>
+      </div>
       <div class="home-grid-item" onclick="App.navigateTo('about')">
         <div class="home-grid-icon" style="background:#727888;">?</div>
         <div class="home-grid-label">待定</div>
@@ -275,6 +279,11 @@
         <p style="margin-top:12px;"><button class="btn btn-primary btn-sm" id="intlchess-rules-close">关闭</button></p>
       </div>
     </div>
+  </div>
+
+  <!-- ===== 灵境页面（iframe 接入 game/lingjing） ===== -->
+  <div class="page page-fullscreen" id="page-lingjing">
+    <iframe id="lingjing-frame" title="灵境" src="about:blank"></iframe>
   </div>
 
   <!-- ===== 关于/占位页面 ===== -->
