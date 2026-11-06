@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Verko · 灵境</title>
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- ===== 导航栏 ===== -->
+  <div class="navbar">
+    <button class="navbar-back" id="navbar-back">&larr; 主页</button>
+    <span class="navbar-title" id="navbar-title">Verko 灵境</span>
+    <button class="navbar-rules" id="navbar-rules" title="规则">?</button>
+  </div>
+
+  <!-- ===== 灵境页面（代码融合，非 iframe） ===== -->
+  <div class="page page-fullscreen" id="page-lingjing">
+    <!-- 登录 / 注册（auth.js 动态渲染） -->
+    <section id="screen-auth" class="screen"></section>
+
+    <!-- 主菜单 -->
+    <section id="screen-menu" class="screen hidden">
+      <div class="menu-wrap">
+        <h1 class="title">灵境<span class="title-sub">LINGJING</span></h1>
+        <p class="subtitle">星空无界 · 多边形之战</p>
+        <div id="hero-badge" class="hero-badge"></div>
+        <div class="menu-btns">
+          <button id="btn-start" class="big-btn">开始游戏</button>
+          <button id="btn-edit" class="big-btn ghost">编辑灵境英雄</button>
+          <button id="btn-lb" class="big-btn ghost">排行榜</button>
+          <button id="btn-logout" class="toolbar-btn logout">登出</button>
+        </div>
+        <p class="ctrl-hint">操作：PC 鼠标控制方向、点击或空格冲刺；手机 左手摇杆控制方向、右手点击冲刺（1 秒冷却，按钮显示倒计时）。撞向敌人造成伤害；击杀敌人恢复生命并成长；圆形资源（绿=回血 / 红=+攻击 / 黄=+移速）接触击败即生效，不计入击杀数。</p>
+      </div>
+    </section>
+
+    <!-- 英雄编辑器（heroEditor.js 动态渲染） -->
+    <section id="screen-editor" class="screen hidden"></section>
+
+    <!-- 游戏 -->
+    <section id="screen-game" class="screen hidden">
+      <canvas id="game-canvas"></canvas>
+      <div id="hud">
+        <div class="hud-left">
+          <div class="hp-bar"><div id="hud-hp-fill" class="hp-fill"></div></div>
+          <div id="hud-stats" class="hud-stats"></div>
+        </div>
+        <div id="hud-kills" class="hud-kills">击杀 0</div>
+        <button id="btn-game-back" class="toolbar-btn hud-back">菜单</button>
+      </div>
+      <!-- 冷却冲刺按钮：置于 #screen-game 直接子级，absolute 相对全屏容器 → 屏幕右下角 -->
+      <button id="btn-dash" class="dash-btn">冲刺</button>
+      <div id="gameover" class="overlay hidden">
+        <div class="overlay-box">
+          <h2>阵亡</h2>
+          <p>本局击杀：<b id="go-kills">0</b></p>
+          <div class="overlay-btns">
+            <button id="btn-go-again" class="big-btn">再来一局</button>
+            <button id="btn-go-menu" class="toolbar-btn">返回菜单</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 排行榜 -->
+    <section id="screen-leaderboard" class="screen hidden">
+      <div class="panel">
+        <div class="panel-bar"><span>灵境英雄 · 区排行</span>
+          <button id="btn-lb-back" class="toolbar-btn">返回</button></div>
+        <div id="lb-list" class="lb-list"></div>
+      </div>
+    </section>
+  </div>
+
+</div>
+
+<!-- ===== JS 脚本（复用父目录资源，路径上溯一级） ===== -->
+<script src="../js/app.js"></script>
+<script src="../js/lingjing-data.js"></script>
+<script src="../js/lingjing-gesture-guard.js"></script>
+<script src="../js/lingjing-auth.js"></script>
+<script src="../js/lingjing-hero-editor.js"></script>
+<script src="../js/lingjing-game.js"></script>
+<script src="../js/lingjing-app.js"></script>
+
+<script>
+/* ============================================================
+ * 灵境子站：无主页，直接进入灵境页
+ * app.js 的 App.init() 硬编码 navigateTo('home')，此处接管为
+ * navigateTo('lingjing')；返回键沿用 "回 home" 语义 → 回作品集首页。
+ * ============================================================ */
+(function () {
+  'use strict';
+
+  var PORTFOLIO = '../index.html';
+  var origNavigate = App.navigateTo.bind(App);
+
+  App.navigateTo = function (pageName) {
+    if (pageName === 'home') {
+      window.location.href = PORTFOLIO;
+      return;
+    }
+    origNavigate(pageName);
+  };
+
+  App.init = function () {
+    App.initNavbar();
+    App.navigateTo('lingjing');
+  };
+})();
+</script>
+
+</body>
+</html>

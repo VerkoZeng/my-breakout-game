@@ -1,394 +1,475 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>枼沄 G-Tool</title>
-<link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Verko · 游戏数值策划作品集：抽卡概率模型、装备成长数值表、关卡难度曲线，以及可玩的小游戏 Demo。">
+  <title>Verko · 游戏数值策划作品集</title>
+  <link rel="stylesheet" href="css/portfolio.css" />
 </head>
 <body>
 
-<div class="app-container">
-
-  <!-- ===== 导航栏 ===== -->
-  <div class="navbar">
-    <button class="navbar-back" id="navbar-back" style="display:none;">&larr; 返回</button>
-    <span class="navbar-title" id="navbar-title">枼沄</span>
-    <button class="navbar-rules" id="navbar-rules" title="规则">?</button>
+<header>
+  <div class="container nav">
+    <div class="nav-name">Verko<small>ZENG</small></div>
+    <nav class="nav-links">
+      <a href="#power">能力地图</a>
+      <a href="#works">数值作品</a>
+      <a href="#reverse">拆解反推</a>
+	  <a href="#origin">数值原型</a>
+      <a href="#games">小游戏 Demo</a>
+	  <a href="#tooling">工具</a>
+      <a href="#contact">联系</a>
+    </nav>
   </div>
+</header>
 
-  <!-- ===== 首页 ===== -->
-  <div class="page active" id="page-home">
-    <div class="home-section-title">休闲</div>
-    <div class="home-grid">
-      <div class="home-grid-item" onclick="App.navigateTo('game2048')">
-        <div class="home-grid-icon" style="background:#e8dcc4;">2¹⁶</div>
-        <div class="home-grid-label">2048</div>
-      </div>
-      <div class="home-grid-item" onclick="App.navigateTo('chess')">
-        <div class="home-grid-icon" style="background:#e8c4c4;">⚄</div>
-        <div class="home-grid-label">象棋</div>
-      </div>
-      <div class="home-grid-item" onclick="App.navigateTo('weiqi')">
-        <div class="home-grid-icon" style="background:#c4e8de;">₪</div>
-        <div class="home-grid-label">围棋</div>
-      </div>
-      <div class="home-grid-item" onclick="App.navigateTo('intlchess')">
-        <div class="home-grid-icon" style="background:#c4d4e8;">♙</div>
-        <div class="home-grid-label">国际象棋</div>
+<main class="container">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div>
+      <p class="hero-kicker">游戏数值策划 · 8 年 · 7 款研发项目</p>
+      <h1 class="hero-title">把随机、成长与曲线，做成玩家手里的<em>手感</em></h1>
+      <p class="hero-sub">抽卡概率、养成数值、关卡难度——从公式建模到配表落地，再从线上数据回到手感校准。下面是代表作品与可玩的小游戏 Demo。</p>
+      <div class="hero-stats">
+        <div class="stat"><b>8<i>年</i></b><span>数值设计经验</span></div>
+        <div class="stat"><b>7<i>款</i></b><span>研发项目</span></div>
+        <div class="stat"><b>3<i>套</i></b><span>从 0 到 1 的数值框架</span></div>
+        <div class="stat"><b>4<i>个</i></b><span>可玩 Demo（见下方）</span></div>
       </div>
     </div>
 
-    <div class="home-section-title">探索</div>
-    <div class="home-grid">
-      <div class="home-grid-item" onclick="App.navigateTo('lingjing')">
-        <div class="home-grid-icon" style="background:#adadad;">✦</div>
-        <div class="home-grid-label">灵境</div>
+    <div class="hero-chart">
+      <div class="chart-head">
+        <span class="chart-title">抽卡累计出货率 · 100 抽硬保底模型</span>
+        <span class="chart-meta">期望 <b id="chartExp">≈ 56.1 抽</b> · 硬保底 <b class="dot" id="chartHard">100 抽</b></span>
       </div>
-      <div class="home-grid-item" onclick="App.navigateTo('about')">
-        <div class="home-grid-icon" style="background:#727888;">?</div>
-        <div class="home-grid-label">待定</div>
+      <svg id="heroCurve" viewBox="0 0 440 240" role="img" aria-label="100 抽硬保底累计出货率曲线示意图">
+        <defs>
+          <linearGradient id="curveGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#4050E0"/>
+            <stop offset="100%" stop-color="#4050E0" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <!-- 网格：横线为 0/25/50/75/100%，竖线位置由脚本按抽数刻度写入 -->
+        <g class="curve-grid-line">
+          <line x1="40" y1="30" x2="410" y2="30"/>
+          <line x1="40" y1="70" x2="410" y2="70"/>
+          <line x1="40" y1="110" x2="410" y2="110"/>
+          <line x1="40" y1="150" x2="410" y2="150"/>
+          <line x1="40" y1="190" x2="410" y2="190"/>
+          <line id="gridV1" x1="133" y1="30" x2="133" y2="190"/>
+          <line id="gridV2" x1="227" y1="30" x2="227" y2="190"/>
+          <line id="gridV3" x1="320" y1="30" x2="320" y2="190"/>
+        </g>
+        <!-- 软保底线（位置由脚本按软保底抽数写入） -->
+        <line id="curveZone" class="curve-zone" x1="298" y1="30" x2="298" y2="190"/>
+        <text id="zoneLabel" class="curve-label" x="286" y="45" text-anchor="end">70 抽后概率递增</text>
+        <!-- 累计曲线区域 -->
+        <path id="curveFill" class="curve-fill" d=""/>
+        <path id="curvePath" class="curve-line" d=""/>
+        <!-- 保底点 -->
+        <line class="curve-axis" x1="40" y1="190" x2="410" y2="190"/>
+        <line class="curve-axis" x1="40" y1="30" x2="40" y2="190"/>
+        <text id="tickStart" class="curve-label" x="36" y="208">1</text>
+        <text id="tickSoft" class="curve-label" x="288" y="202">70</text>
+        <text id="tickHard" class="curve-label" x="396" y="202">100</text>
+        <text class="curve-label" x="12" y="34">100%</text>
+        <text id="axisBase" class="curve-label" x="20" y="188">1%</text>
+        <circle id="pityPoint" class="curve-point" r="4.5"/>
+        <text id="pityLabel" class="curve-label bold" x="0" y="0"/>
+        <circle id="softPoint" class="curve-point" r="3.5" cx="298" cy="109"/>
+        <text id="midLabel" class="curve-label" x="306" y="124" style="fill:#C98A1B">≈ 50.5%</text>
+      </svg>
+      <div class="legend">
+        <span><i class="ind"></i>累计出货率</span>
+        <span><i class="amb"></i><span id="legendSoft">70</span> 抽软保底线</span>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- ===== 2048 游戏页面 ===== -->
-  <div class="page" id="page-game2048">
-    <div class="game-container">
-      <div class="game-header">
-        <div class="game-info">
-          <span style="font-size:13px;color:#999;">分数</span>
-          <span class="game-score" id="g2048-score">0</span>
+  <!-- 能力地图 · 五维雷达图 -->
+  <section id="power">
+    <div class="sec-head">
+      <h2>能力地图</h2>
+      <p>数值不是孤立的数字，是一套让游戏「好玩且公平」的系统。五条主线，我在同一张表里对齐。</p>
+    </div>
+    <div class="radar-wrap">
+      <div class="radar-figure">
+        <svg id="radarChart" viewBox="0 0 460 330" role="img" aria-label="五维能力雷达图"></svg>
+      </div>
+      <ul class="radar-legend">
+        <li class="radar-item" data-label="游戏拆解与反推" data-value="80">
+          <div class="rl-head"><span class="rl-name">游戏拆解与反推</span><span class="rl-val">80</span></div>
+          <div class="rl-bar"><i></i></div>
+        </li>
+        <li class="radar-item" data-label="建模与工具化" data-value="90">
+          <div class="rl-head"><span class="rl-name">建模与工具化</span><span class="rl-val">90</span></div>
+          <div class="rl-bar"><i></i></div>
+        </li>
+		<li class="radar-item" data-label="自研项目落地" data-value="80">
+          <div class="rl-head"><span class="rl-name">自研项目落地</span><span class="rl-val">80</span></div>
+          <div class="rl-bar"><i></i></div>
+        </li>
+        <li class="radar-item" data-label="职场应变力" data-value="70">
+          <div class="rl-head"><span class="rl-name">职场应变力</span><span class="rl-val">70</span></div>
+          <div class="rl-bar"><i></i></div>
+        </li>
+		<li class="radar-item" data-label="全链路数值体系" data-value="80">
+          <div class="rl-head"><span class="rl-name">全链路数值体系</span><span class="rl-val">80</span></div>
+          <div class="rl-bar"><i></i></div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 数值作品 -->
+  <section id="works">
+    <div class="sec-head">
+      <h2>全链路数值体系</h2>
+      <p>战斗公式可解释、经济产销可闭环、成长节奏可预期、商业化可回本——四条线在同一张表里对齐，而不是各算各的。</p>
+    </div>
+    <div class="pillar-grid">
+      <div class="cell"><h3>战斗公式</h3><p>伤害、防御、增益的显式关系，调参即见结果，不留黑箱。</p></div>
+      <div class="cell"><h3>属性分配</h3><p>主属性与衍生属性的映射，成长不溢出、不浪费。</p></div>
+      <div class="cell"><h3>经济产销</h3><p>产出、消耗、通胀的闭环模型，货币不过载。</p></div>
+      <div class="cell"><h3>平衡调整</h3><p>数值区间与边界约束，强弱有度、可回归。</p></div>
+      <div class="cell"><h3>成长节奏</h3><p>等级—战力曲线，让付费与肝度各得其所。</p></div>
+      <div class="cell amber"><h3>商业化</h3><p>付费点与数值产出的咬合，回本可测算。</p></div>
+    </div>
+
+    <div class="sec-head" style="margin-top:48px">
+      <h3>数值策划作品</h3>
+      <p>概率、成长与关卡，是数值的三个主战场。每个项目都走同一套流程：先建模，再配表、调试，最后用线上数据校准手感。</p>
+    </div>
+    <div class="works">
+      <div class="work-row">
+        <div>
+          <div class="work-name">《足球小将》</div>
+          <span class="work-type">抽卡概率模型</span>
         </div>
-        <div class="game-info">
-          <span style="font-size:13px;color:#999;">最高</span>
-          <span class="game-best" id="g2048-best">0</span>
-        </div>
-        <button class="btn btn-sm btn-primary" id="g2048-reset">重新开始</button>
-      </div>
-      <div class="game-2048-board" id="game2048-board"></div>
-      <p style="color:#999;font-size:12px;margin-top:12px;">键盘方向键 或 滑动操作</p>
-    </div>
-  </div>
-
-  <!-- ===== 象棋页面 ===== -->
-  <div class="page" id="page-chess">
-    <div class="game-container">
-      <div class="game-header">
-        <div class="game-info"><span class="game-status" id="chess-status">红方走棋</span></div>
-        <div class="game-actions">
-          <button class="btn btn-sm" id="chess-undo">悔棋</button>
-          <button class="btn btn-sm btn-primary" id="chess-restart">重新开始</button>
-        </div>
-      </div>
-      <div class="ai-controls">
-        <button class="btn btn-xs" id="chess-ai-red">红方电脑</button>
-        <button class="btn btn-xs" id="chess-diff-down">-</button>
-        <span class="diff-display" id="chess-diff-display">中等</span>
-        <button class="btn btn-xs" id="chess-diff-up">+</button>
-        <button class="btn btn-xs" id="chess-ai-black">黑方电脑</button>
-      </div>
-      <canvas id="chess-canvas" class="game-board" style="background:#f0d9a0;"></canvas>
-    </div>
-    <div class="rules-panel" id="chess-rules-panel">
-      <div class="rules-overlay" id="chess-rules-overlay"></div>
-      <div class="rules-content">
-        <h3>中国象棋规则</h3>
-        <p><strong>一、棋盘与棋子</strong></p>
-		<p>· 棋盘由 9 条竖线和 10 条横线组成，共 90 个交叉点。</p>
-		<p>· 中间"楚河汉界"将棋盘分为红方（下方）和黑方（上方）两个阵营。</p>
-		<p>· 双方各有 16 枚棋子：帅/将、仕/士、相/象、马、车、炮、兵/卒。</p>
-		<p></p>
-		<p><strong>二、走棋顺序</strong></p>
-		<p>· 红方先行，双方轮流走棋，每次移动一枚己方棋子。</p>
-		<p>· 点击己方棋子可选中，再点击目标位置完成走棋。</p>
-		<p>· 绿色圆点提示该棋子的所有合法走法。</p>
-		<p></p>
-		<p><strong>三、棋子走法</strong></p>
-		<p>· 帅/将：九宫内直走一格。</p>
-		<p>· 仕/士：九宫内斜走一格。</p>
-		<p>· 相/象：田字斜走，不能过河，塞象眼则不能走。</p>
-		<p>· 马：日字走法，蹩马腿则不能走。</p>
-		<p>· 车：直线任意距离，遇子则止。</p>
-		<p>· 炮：直线走，吃时必须隔一子（炮架）。</p>
-		<p>· 兵/卒：过河前只能前进，过河后可前进或横走。</p>
-		<p></p>
-		<p><strong>四、吃子规则</strong></p>
-		<p>· 走棋至对方棋子所在位置即可吃掉该子。</p>
-		<p>· 不能吃掉己方棋子。</p>
-		<p>· 走完后己方不能被"将"，否则该走法不合法。</p>
-		<p></p>
-		<p><strong>五、将军与将杀</strong></p>
-		<p>· "将军"：一方走棋后威胁吃掉对方的将/帅。</p>
-		<p>· "应将"：被将的一方必须立即化解，否则输棋。</p>
-		<p>· "将杀"：无法应将即为将杀，该方告负。</p>
-		<p>· "困毙"：轮到走棋但无合法走法（未被将）也为输。</p>
-		<p>· "飞将"：两将/帅之间无棋子对面相视，视为将军。</p>
-		<p></p>
-		<p><strong>六、胜负判定</strong></p>
-		<p>· 将杀或困毙对方 → 获胜。</p>
-		<p>· 对方认输 → 获胜。</p>
-		<p></p>
-		<p><strong>七、操作说明</strong></p>
-		<p>· 点击己方棋子选中（金色高亮），再点击目标位置移动。</p>
-		<p>· 绿色圆点标示当前棋子的合法走法。</p>
-		<p>· 悔棋：撤销上一步操作。</p>
-		<p>· 重新开始：重置棋盘，重新开局。</p>
-        <p style="margin-top:12px;"><button class="btn btn-primary btn-sm" id="chess-rules-close">关闭</button></p>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== 围棋页面 ===== -->
-  <div class="page" id="page-weiqi">
-    <div class="game-container">
-      <div class="game-header">
-        <div class="game-info"><span class="game-status" id="weiqi-status">黑方执先</span></div>
-        <div class="game-actions">
-          <button class="btn btn-sm" id="weiqi-pass">虚手</button>
-          <button class="btn btn-sm" id="weiqi-resign">认输</button>
-          <button class="btn btn-sm" id="weiqi-undo">悔棋</button>
-          <button class="btn btn-sm btn-primary" id="weiqi-restart">重新开始</button>
-        </div>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin:8px 0;">
-        <span class="weiqi-captured-black" style="font-size:12px;">提子: 0</span>
-        <span class="weiqi-captured-white" style="font-size:12px;">提子: 0</span>
-      </div>
-      <div class="ai-controls">
-        <button class="btn btn-xs" id="weiqi-ai-black">黑方电脑</button>
-        <button class="btn btn-xs" id="weiqi-diff-down">-</button>
-        <span class="diff-display" id="weiqi-diff-display">中等</span>
-        <button class="btn btn-xs" id="weiqi-diff-up">+</button>
-        <button class="btn btn-xs" id="weiqi-ai-white">白方电脑</button>
-      </div>
-      <canvas id="weiqi-canvas" class="game-board" style="background:#e8c870;"></canvas>
-    </div>
-    <div class="rules-panel" id="weiqi-rules-panel">
-      <div class="rules-overlay" id="weiqi-rules-overlay"></div>
-      <div class="rules-content">
-        <h3>围棋规则</h3>
-        <p><strong>一、棋盘与棋子</strong></p>
-		<p>· 标准 19×19 路棋盘，共 361 个交叉点。</p>
-		<p>· 黑方持 181 枚黑子，白方持 180 枚白子。</p>
-		<p>· 棋子下在交叉点上，落子无悔。</p>
-		<p></p>
-		<p><strong>二、基本规则</strong></p>
-		<p>· 黑方先下，双方轮流落子，每次下一子。</p>
-		<p>· 棋子一旦落在棋盘上，不得移动。</p>
-		<p>· 可在任意空交叉点落子（禁着点除外）。</p>
-		<p></p>
-		<p><strong>三、气与提子</strong></p>
-		<p>· 与棋子直线相连的空交叉点称为"气"。</p>
-		<p>· 当棋子（或棋串）的所有气被对方堵住时，该棋子被提走。</p>
-		<p>· 提掉的棋子称为"提子"，在状态栏显示双方提子数。</p>
-		<p></p>
-		<p><strong>四、禁着点（自杀）</strong></p>
-		<p>· 落子后己方棋子无气且无法提掉对方 → 禁止落子。</p>
-		<p>· 系统会自动拦截自杀行为并提示。</p>
-		<p></p>
-		<p><strong>五、打劫规则</strong></p>
-		<p>· 当一方提掉对方一子后，对方不能立即回提同一位置。</p>
-		<p>· 须先在别处走一手，待对方应后，方可回提。</p>
-		<p>· 系统会拦截立即回提的行为并提示"禁止打劫"。</p>
-		<p></p>
-		<p><strong>六、虚手与终局</strong></p>
-		<p>· 无棋可下时可选择"虚手"（过一手）。</p>
-		<p>· 双方连续虚手 → 终局，系统自动计分。</p>
-		<p>· 亦可点击"认输"直接结束对局。</p>
-		<p></p>
-		<p><strong>七、计分规则（中国规则数子法）</strong></p>
-		<p>· 终局后统计双方围住的空点（目数）。</p>
-		<p>· 得分 = 棋盘上己方棋子数 + 围住的空点数。</p>
-		<p>· 白方贴目 7.5 子（补偿黑方先行优势）。</p>
-		<p>· 得分高者获胜。</p>
-		<p></p>
-		<p><strong>八、操作说明</strong></p>
-		<p>· 点击棋盘交叉点落子。</p>
-		<p>· 虚手：放弃一手，轮到对方。</p>
-		<p>· 认输：当前方认输，对方获胜。</p>
-		<p>· 悔棋：撤销上一步操作。</p>
-		<p>· 重开：重置棋盘，重新开始。</p>
-        <p style="margin-top:12px;"><button class="btn btn-primary btn-sm" id="weiqi-rules-close">关闭</button></p>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== 国际象棋页面 ===== -->
-  <div class="page" id="page-intlchess">
-    <div class="game-container">
-      <div class="game-header">
-        <div class="game-info"><span class="game-status" id="intlchess-status">白方走棋</span></div>
-        <div class="game-actions">
-          <button class="btn btn-sm" id="intlchess-undo">悔棋</button>
-          <button class="btn btn-sm btn-primary" id="intlchess-restart">重新开始</button>
+        <p class="work-desc">
+		  100 抽硬保底，70 抽后概率线性递增的软保底模型。全池期望 78.9 抽(0.1%基础率)，控制头部玩家付费深度的同时稳住中小 R 的体验。
+		</p>
+        <div class="work-metrics">
+          <b>56.1<span>抽</span></b>
+          <span>全局期望出货</span>
+          <b class="acc">+18%</b>
+          <span>付费转化率</span>
         </div>
       </div>
-      <div style="display:flex;justify-content:space-between;margin:8px 0;">
-        <div class="captured-pieces" id="intlchess-captured-white"></div>
-        <div class="captured-pieces" id="intlchess-captured-black"></div>
-      </div>
-      <div class="ai-controls">
-        <button class="btn btn-xs" id="intlchess-ai-white">白方电脑</button>
-        <button class="btn btn-xs" id="intlchess-diff-down">-</button>
-        <span class="diff-display" id="intlchess-diff-display">中等</span>
-        <button class="btn btn-xs" id="intlchess-diff-up">+</button>
-        <button class="btn btn-xs" id="intlchess-ai-black">黑方电脑</button>
-      </div>
-      <canvas id="intlchess-canvas" class="game-board" style="background:#f0d9b5;"></canvas>
-    </div>
-    <div class="rules-panel" id="intlchess-rules-panel">
-      <div class="rules-overlay" id="intlchess-rules-overlay"></div>
-      <div class="rules-content">
-        <h3>国际象棋规则</h3>
-		<p><strong>一、棋盘与棋子</strong></p>
-        <p>· 棋盘由 8×8 共 64 个黑白相间的方格组成。</p>
-        <p>· 白方（下方）先行，双方各有 16 枚棋子。</p>
-        <p>· 每方：王×1、后×1、车×2、象×2、马×2、兵×8。</p>
-		<p><strong>二、棋子走法</strong></p>
-        <p>· 兵(♟♙)：首次可走两格，斜前方吃子。到底线升变为后。</p>
-        <p>· 马(♞♘)：L形跳跃（2+1），无视障碍。</p>
-        <p>· 象(♝♗)：斜线任意距离。</p>
-        <p>· 车(♜♖)：直线任意距离，参与王车易位。</p>
-        <p>· 后(♛♕)：直线+斜线任意距离。</p>
-        <p>· 王(♚♔)：周围一格，可与车易位（未移动过且不被将军）。</p>
-        <p>· 吃过路兵：对方兵首步走两格经过己方兵攻击格时可吃。</p>
-		<p><strong>三、特殊规则</strong></p>
-		<p>· 王车易位：王与车各未移动、中间无子、未被将军时，王向车移动两格，车越过王。</p>
-		<p>· 吃过路兵：兵走两格后，相邻的对方兵可斜进吃掉它（仅限立即应手）。</p>
-		<p>· 兵升变：兵到达对方底线时自动升变为后。</p>
-		<p></p>
-		<p><strong>四、将军与将杀</strong></p>
-		<p>· "将军"：一方棋子威胁吃掉对方王。</p>
-		<p>· "应将"：被将时必须应将（移动王、吃掉威胁棋子、垫将）。</p>
-		<p>· "将杀"：无法应将则为将杀，该方告负。</p>
-		<p>· "逼和"：轮到走棋但无合法走法且未被将军 → 和棋。</p>
-		<p></p>
-		<p><strong>五、胜负与和棋</strong></p>
-		<p>· 将杀对方 → 获胜。</p>
-		<p>· 对方认输 → 获胜。</p>
-		<p>· 逼和 → 和棋。</p>
-		<p></p>
-		<p><strong>六、操作说明</strong></p>
-		<p>· 点击己方棋子选中（黄色高亮），再点击目标格移动。</p>
-		<p>· 绿色圆点提示当前棋子的合法走法。</p>
-		<p>· 最后一步走棋的格子以高亮标识。</p>
-		<p>· 右侧显示双方被吃的棋子。</p>
-		<p>· 悔棋：撤销上一步操作。</p>
-		<p>· 重开：重置棋盘，重新开局。</p>
-        <p style="margin-top:12px;"><button class="btn btn-primary btn-sm" id="intlchess-rules-close">关闭</button></p>
-      </div>
-    </div>
-  </div>
 
-  <!-- ===== 灵境页面（代码融合，非 iframe） ===== -->
-  <div class="page page-fullscreen" id="page-lingjing">
-    <!-- 登录 / 注册（auth.js 动态渲染） -->
-    <section id="screen-auth" class="screen"></section>
-
-    <!-- 主菜单 -->
-    <section id="screen-menu" class="screen hidden">
-      <div class="menu-wrap">
-        <h1 class="title">灵境<span class="title-sub">LINGJING</span></h1>
-        <p class="subtitle">星空无界 · 多边形之战</p>
-        <div id="hero-badge" class="hero-badge"></div>
-        <div class="menu-btns">
-          <button id="btn-start" class="big-btn">开始游戏</button>
-          <button id="btn-edit" class="big-btn ghost">编辑灵境英雄</button>
-          <button id="btn-lb" class="big-btn ghost">排行榜</button>
-          <button id="btn-logout" class="toolbar-btn logout">登出</button>
+      <div class="work-row">
+        <div>
+          <div class="work-name">《斗道世界》</div>
+          <span class="work-type">装备成长数值表</span>
         </div>
-        <p class="ctrl-hint">操作：PC 鼠标控制方向、点击或空格冲刺；手机 左手摇杆控制方向、右手点击冲刺（1 秒冷却，按钮显示倒计时）。撞向敌人造成伤害；击杀敌人恢复生命并成长；圆形资源（绿=回血 / 红=+攻击 / 黄=+移速）接触击败即生效，不计入击杀数。</p>
-      </div>
-    </section>
-
-    <!-- 英雄编辑器（heroEditor.js 动态渲染） -->
-    <section id="screen-editor" class="screen hidden"></section>
-
-    <!-- 游戏 -->
-    <section id="screen-game" class="screen hidden">
-      <canvas id="game-canvas"></canvas>
-      <div id="hud">
-        <div class="hud-left">
-          <div class="hp-bar"><div id="hud-hp-fill" class="hp-fill"></div></div>
-          <div id="hud-stats" class="hud-stats"></div>
+        <p class="work-desc">
+		  <span>强化成长、词条权重与养成节奏三维建模，长线投放不失控，中后期不溢出:</span><br>
+		  <span class="fine">强化成长用几何级数 K^n 建模，K∈[1.06,1.12] 是每级乘子 ；</span><br>
+		  <span class="fine">词条权重用加权类别抽样建模，靠权重分布 + 反堆叠控制期望与方差；</span><br>
+		  <span class="fine">养成节奏靠「成本增长率 ρ > 战力增长率 K」让经济成为瓶颈，使总战力对资源投放呈亚线性依赖。</span>
+		</p>
+        <div class="work-metrics">
+          <b>1.06–1.12</b>
+          <span>成长 K 值区间</span>
+          <b class="acc">47<span>条</span></b>
+          <span>词条权重表</span>
         </div>
-        <div id="hud-kills" class="hud-kills">击杀 0</div>
-        <button id="btn-game-back" class="toolbar-btn hud-back">菜单</button>
       </div>
-      <!-- 冷却冲刺按钮：置于 #screen-game 直接子级，absolute 相对全屏容器 → 屏幕右下角 -->
-      <button id="btn-dash" class="dash-btn">冲刺</button>
-      <div id="gameover" class="overlay hidden">
-        <div class="overlay-box">
-          <h2>阵亡</h2>
-          <p>本局击杀：<b id="go-kills">0</b></p>
-          <div class="overlay-btns">
-            <button id="btn-go-again" class="big-btn">再来一局</button>
-            <button id="btn-go-menu" class="toolbar-btn">返回菜单</button>
+
+      <div class="work-row">
+        <div>
+          <div class="work-name">《灌篮高手》</div>
+          <span class="work-type">对抗节奏与卡点验证</span>
+        </div>
+        <p class="work-desc">
+		  <span>用连续概率替代硬判定，再叠三重修正，让"以弱胜强"可设计、分差可控。</span><br>
+		  <span class="fine">成功率 = 1 / ( 1 + 10^(( 防守 − 进攻 ) / k) )</span><br>
+		  <span>用"关卡卡点线"（章节 → 关卡 → 玩家/怪物卡等级曲线）锁定难度爬坡，再用"调整目标"做 模拟 / 运营投放前 / 运营投放后 三列对照，量化球员品质、强化等级、经验产出节奏目标。</span><br>
+		  <span class="fine">即"投放前模拟预测 vs 投放后实测"的节奏验证闭环，可直接判断投放是否达预期、卡点是否过陡。</span><br>
+		</p>
+        <div class="work-metrics">
+          <b>1736</b>
+          <span>关卡卡点线</span>
+          <b class="acc">3<span>段</span></b>
+          <span>投放前后对照</span>
+        </div>
+      </div>
+
+      <div class="work-row">
+        <div>
+          <div class="work-name">《龙珠无双》</div>
+          <span class="work-type">关卡难度曲线</span>
+        </div>
+        <p class="work-desc">
+		  继《天命女神》项目创作。难度斜率、卡点密度与挫败感回收机制建模：卡点后用爽点补偿，配合动态软调，降低流失同时保住挑战感。
+		</p>
+        <div class="work-metrics">
+          <b class="acc">+5<span>pt</span></b>
+          <span>首通关卡留存</span>
+          <b>+11%</b>
+          <span>关卡内付费转化</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 游戏拆解与反推 -->
+  <section id="reverse">
+    <div class="sec-head">
+      <h2>游戏拆解与反推</h2>
+      <p>别人怎么做的，我看得懂也能复现。从代码与数据反推设计意图，把经验变成可迁移的方法。</p>
+    </div>
+    <div class="pillar-grid two">
+      <div class="cell amber">
+        <div class="big-num">3+<span> 款卡牌战斗公式详解</span></div>
+        <div class="chip-row">
+          <span class="chip"><a href="number/n-dqss.html" target="_blank" rel="noopener">第七史诗</a></span>
+          <span class="chip">放置三国</span>
+          <span class="chip">姜饼人王国</span>
+        </div>
+      </div>
+	  <div class="cell">
+        <div class="big-num">38+<span> 款 SWF 反编译拆解</span></div>
+        <div class="chip-row">
+          <span class="chip">密室逃脱</span>
+          <span class="chip">恐怖</span>
+          <span class="chip">生存</span>
+          <span class="chip">平台跳跃</span>
+          <span class="chip">物理益智</span>
+        </div>
+      </div>
+	  <div class="cell">
+        <div class="big-num">10+<span> 款 系统节奏分析</span></div>
+        <div class="chip-row">
+          <span class="chip">疯狂水世界</span>
+		  <span class="chip">仗剑传说</span>
+          <span class="chip">梦幻模拟战</span>
+          <span class="chip">剑与远征AFK</span>
+		  <span class="chip">闪烁之光</span>
+          <span class="chip">姜饼人王国</span>
+		  <span class="chip">寻道大千</span>
+		  <span class="chip">荒野乱斗</span>
+		  <span class="chip">喵星大作战</span>
+		  <span class="chip">玄元剑仙</span>
+        </div>
+      </div>
+      <div class="cell">
+        <div class="big-num">23+<span> 款 调研分享</span></div>
+        <div class="chip-row">
+          <span class="chip">王者荣耀</span>
+		  <span class="chip">饥荒</span>
+		  <span class="chip">明日方舟</span>
+          <span class="chip">三国志·战略版</span>
+          <span class="chip">崩坏3rd</span>
+          <span class="chip">率土之滨</span>
+          <span class="chip">赛马娘</span>
+		  <span class="chip">阴阳师</span>
+		  <span class="chip">光·遇</span>
+		  <span class="chip">斗罗大陆</span>
+		  <span class="chip">航海王·热血航线</span>
+		  <span class="chip">放置少女</span>
+		  <span class="chip">叫我大掌柜</span>
+		  <span class="chip">守望黎明</span>
+		  <span class="chip">一念逍遥</span>
+        </div>
+      </div>
+	  
+    </div>
+  </section>
+
+  <!-- 数值原型 -->
+  <section id="origin">
+    <div class="sec-head">
+      <h2>数值原型</h2>
+      <p>别人怎么做的，我看得懂也能复现。从代码与数据反推设计意图，把经验变成可迁移的方法。</p>
+    </div>
+    <div class="pillar-grid two">
+      <div class="cell amber">
+        <div class="big-num">2+<span> 抽奖概率类</span></div>
+        <div class="chip-row">
+          <span class="chip">翻牌</span>
+          <span class="chip">骰子</span>
+        </div>
+      </div>
+	  <div class="cell amber">
+        <div class="big-num">3+<span> 匹配积分类</span></div>
+        <div class="chip-row">
+          <span class="chip">ELO&破同</span>
+		  <span class="chip">瑞士积分制</span>
+		  <span class="chip">选拔淘汰制</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 小游戏 -->
+  <section id="games">
+    <div class="sec-head">
+      <h2>小游戏 Demo</h2>
+      <p>不是截图，是真能玩的数值。左边是我设计的抽卡保底模型的可玩版本，右边是随手写的小玩具。</p>
+    </div>
+    <div class="game-grid">
+
+      <!-- 抽卡模拟器 -->
+      <div class="game-panel">
+        <div class="game-head">
+          <h3>概率抽卡模拟器</h3>
+          <p>参数可手动调整，试试你的欧气。</p>
+        </div>
+        <div class="gacha-model" id="modelLabel">SR <b>5.0%</b> + SSR <b>1.0%</b> · 70 抽后递增 · 100 抽<b>硬保底</b></div>
+        <div class="gacha-params">
+          <div class="gp-field">
+            <label for="inSR">SR %</label>
+            <input id="inSR" type="number" min="0" max="100" step="0.1" value="5" inputmode="decimal">
+          </div>
+		  <div class="gp-field">
+            <label for="inSSR">SSR %</label>
+            <input id="inSSR" type="number" min="0" max="100" step="0.1" value="1" inputmode="decimal">
+          </div>
+          <div class="gp-field">
+            <label for="inSoft">软保底(抽)</label>
+            <input id="inSoft" type="number" min="1" step="1" value="70" inputmode="numeric">
+          </div>
+          <div class="gp-field">
+            <label for="inHard">硬保底(抽)</label>
+            <input id="inHard" type="number" min="1" step="1" value="100" inputmode="numeric">
+          </div>
+          <div class="gp-field">
+            <label for="inSSRInc">SSR递增 %</label>
+            <input id="inSSRInc" type="number" min="0" max="100" step="0.1" value="1.0" inputmode="decimal">
+          </div>
+          <div class="gp-expect" id="expBox">
+            <span class="gp-exp-val" id="expVal">≈ 51.48 抽</span>
           </div>
         </div>
+        <div class="gacha-actions">
+          <button class="btn primary" id="btnSingle">单抽</button>
+          <button class="btn primary" id="btnTen">十连</button>
+          <button class="btn ghost" id="btnReset">重置</button>
+        </div>
+        <div class="gacha-stats">
+          <div class="g-stat"><b id="totalCnt">0</b><span>总抽数</span></div>
+          <div class="g-stat"><b class="ssr" id="ssrCnt">0</b><span id="ssrRate">SSR 出货 1.00%</span></div>
+          <div class="g-stat"><b class="sr" id="srCnt">0</b><span id="srRate">SR 出货 5.00%</span></div>
+        </div>
+        <div class="pity-track">
+          <div class="pity-label"><span>保底水位</span><span id="pityText">第 0 抽 / 100</span></div>
+          <div class="pity-bar"><div class="pity-fill" id="pityFill"></div></div>
+        </div>
+        <div class="gacha-log" id="gachaLog"><span class="empty">还没有抽卡，点一下试试。</span></div>
+        <div class="mini-curve">
+          <div class="mini-curve-title">当前池累计出货率曲线</div>
+          <canvas id="gachaCurve"></canvas>
+        </div>
       </div>
-    </section>
 
-    <!-- 排行榜 -->
-    <section id="screen-leaderboard" class="screen hidden">
-      <div class="panel">
-        <div class="panel-bar"><span>灵境英雄 · 区排行</span>
-          <button id="btn-lb-back" class="toolbar-btn">返回</button></div>
-        <div id="lb-list" class="lb-list"></div>
+      <!-- 2048（迁移自 index22，已去 App 依赖，可直接运行） -->
+      <div class="game-panel">
+        <div class="game-head">
+          <h3>2048</h3>
+          <p>方向键或拖拽 / 滑动屏幕移动方块，合并到 2048。</p>
+        </div>
+        <div class="g2048-foot">
+          <span>分数<b id="g2048-score">0</b></span>
+          <span>最高<b id="g2048-best">0</b></span>
+          <button class="btn ghost" id="g2048-reset" style="flex:0 0 auto;padding:6px 14px;font-size:13px;">重新开始</button>
+        </div>
+        <div class="game-2048-board" id="game2048-board"></div>
+        <p class="t2048-tip">键盘 ↑↓←→，或鼠标拖拽 / 手机触摸滑动</p>
       </div>
-    </section>
-  </div>
 
-  <!-- ===== 关于/占位页面 ===== -->
-  <div class="page" id="page-about">
-    <div class="placeholder-page">
-      <img src="img/qrcode.jpg" alt="qrcode" style="max-width:200px;border-radius:8px;" />
-      <h3 style="margin:16px 0;">更多精彩内容，敬请期待！</h3>
-      <p style="color:#999;">若使用过程中遇到问题，请前往公众号留言</p>
-	  <p style="color:#999;">欢迎关注微信公众号（长按）</p>
-	  <p><a href="https://mp.weixin.qq.com/s/TGiXzIn2hLlpfZMJNx-Mjw" target="_blank" rel="noopener noreferrer">链接直达</a></p>
+      <!-- 游戏集 -->
+      <div class="game-panel">
+        <div class="game-head">
+          <h3>游戏集</h3>
+          <p>点击即玩！其中《灵境》属于个人研发创作产品，还在优化制作中。</p>
+        </div>
+        <div class="game-set">
+          <a class="gs-card" href="chess/chess.html" target="_blank" rel="noopener">
+            <span class="gs-icon">⚄</span>
+            <span class="gs-name">棋</span>
+            <span class="gs-desc">中国象棋 · 围棋 · 国际象棋</span>
+            <span class="gs-go">进入 <span>→</span></span>
+          </a>
+          <a class="gs-card amber" href="chess/lingjing.html" target="_blank" rel="noopener">
+            <span class="gs-icon">✦</span>
+            <span class="gs-name">灵境</span>
+            <span class="gs-desc">多边形对战，独立研发中</span>
+            <span class="gs-go">进入 <span>→</span></span>
+          </a>
+          <a class="gs-card slate">
+            <span class="gs-icon">?</span>
+            <span class="gs-name">待定</span>
+            <span class="gs-desc">更多内容，敬请期待</span>
+          </a>
+        </div>
+      </div>
+
     </div>
-  </div>
+  </section>
 
-  <div class="version-mark">—————————— 枼沄 ——————————</div>
+  <!-- 建模与工具化 -->
+  <section id="tooling">
+    <div class="sec-head">
+      <h2>建模与工具化</h2>
+      <p>根据体验需求建立公式模型，一通百通。</p>
+	  <p>工具是数值能力的延伸。把计算验证做成可复现的闭环，而不是「一次性」道具。</p>
+    </div>
+    <div class="pillar-grid two">
+      <div class="cell"><h3>Excel 2024 + Python 3.12.9</h3><p>复杂数学建模、多领域模拟，公式校验到完全正确。</p></div>
+      <div class="cell amber"><h3>留公式</h3><p>Excel 输出保留公式而非硬编码数值。</p></div>
+	  <div><img src="./img/PythonTools.png" style="max-width:600px;border-radius:8px;" /></div>
+    </div>
 
-  <!-- ===== 底部导航 ===== -->
-  <div class="tab-bar">
-    <button class="tab-item active" data-page="home">
-      <span class="tab-icon">▣</span>首页
-    </button>
-    <button class="tab-item" data-page="game2048">
-      <span class="tab-icon">2¹⁶</span>2048
-    </button>
-    <button class="tab-item" data-page="chess">
-      <span class="tab-icon">⚄</span>象棋
-    </button>
-    <button class="tab-item" data-page="weiqi">
-      <span class="tab-icon">₪</span>围棋
-    </button>
-    <button class="tab-item" data-page="intlchess">
-      <span class="tab-icon">♙</span>国象
-    </button>
-  </div>
+	
 
-</div>
+    <div class="loop">
+      <div class="step">
+        <div class="n">STEP 01</div>
+        <h3>先怀疑脚本</h3>
+        <p>结果异常先查工具与探针，再怀疑产物</p>
+      </div>
+      <div class="step">
+        <div class="n">STEP 02</div>
+        <h3>真实数据体检</h3>
+        <p>优化前先跑真实数据，拿到反馈再动手。</p>
+      </div>
+      <div class="step">
+        <div class="n">STEP 03</div>
+        <h3>逐字节对拍</h3>
+        <p>跨版本逐字节对比，确认只有目标字段变化。</p>
+      </div>
+    </div>
+  </section>
 
-<!-- ===== JS 脚本 ===== -->
-<script src="js/app.js"></script>
-<script src="js/ai-engine.js"></script>
-<script src="js/chess-ai.js"></script>
-<script src="js/game2048.js"></script>
-<script src="js/chess-chinese.js"></script>
-<script src="js/chess-go.js"></script>
-<script src="js/chess-international.js"></script>
-<!-- 灵境（LingJing）融合模块 -->
-<script src="js/lingjing-data.js"></script>
-<script src="js/lingjing-gesture-guard.js"></script>
-<script src="js/lingjing-auth.js"></script>
-<script src="js/lingjing-hero-editor.js"></script>
-<script src="js/lingjing-game.js"></script>
-<script src="js/lingjing-app.js"></script>
+  <!-- 联系 -->
+  <footer id="contact">
+    <div class="footer-grid">
+      <p class="footer-note">做数值，也做游戏。欢迎一起聊聊概率、曲线与手感——无论是项目合作，还是单纯的数值讨论。</p>
+      <div class="footer-col">
+        <h4>联系方式</h4>
+        <span>邮箱：puyangzeng@qq.com</span>
+      </div>
+      <div class="footer-col">
+        <h4>其他作品</h4>
+        <a href="chess/about.html" target="_blank" rel="noopener">微信公众号</a>
+      </div>
+    </div>
+    <p class="footer-bottom">Verko · 游戏数值策划作品集 · 2026 · 成都</p>
+  </footer>
+
+</main>
+
+<!-- 逻辑模块：按职责拆分，各自独立、无跨模块依赖 -->
+<script src="js/portfolio/gacha-model.js"></script>
+<script src="js/portfolio/hero-curve.js"></script>
+<script src="js/portfolio/radar.js"></script>
+<script src="js/portfolio/gacha.js"></script>
+<script src="js/portfolio/game2048.js"></script>
 
 </body>
 </html>

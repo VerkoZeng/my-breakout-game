@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Verko · 待定</title>
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- ===== 导航栏 ===== -->
+  <div class="navbar">
+    <button class="navbar-back" id="navbar-back">&larr; 主页</button>
+    <span class="navbar-title" id="navbar-title">Verko 待定</span>
+    <button class="navbar-rules" id="navbar-rules" title="规则">?</button>
+  </div>
+
+  <!-- ===== 关于/占位页面 ===== -->
+  <div class="page" id="page-about">
+    <div class="placeholder-page">
+      <img src="../img/qrcode.jpg" alt="qrcode" style="max-width:200px;border-radius:8px;" />
+      <h3 style="margin:16px 0;">更多精彩内容，敬请期待！</h3>
+      <p style="color:#999;">若使用过程中遇到问题，请前往公众号留言</p>
+      <p style="color:#999;">欢迎关注微信公众号（长按）</p>
+      <p><a href="https://mp.weixin.qq.com/s/TGiXzIn2hLlpfZMJNx-Mjw" target="_blank" rel="noopener">链接直达</a></p>
+    </div>
+  </div>
+
+  <div class="version-mark">—————————— Verko ——————————</div>
+
+</div>
+
+<!-- ===== JS 脚本（复用父目录资源，路径上溯一级） ===== -->
+<script src="../js/app.js"></script>
+<script src="../js/lingjing-gesture-guard.js"></script>
+
+<script>
+/* ============================================================
+ * 待定子站：无主页，直接进入关于页
+ * 返回键沿用 app.js 的 "回 home" 语义 → 回作品集首页。
+ * ============================================================ */
+(function () {
+  'use strict';
+
+  var PORTFOLIO = '../index.html';
+  var origNavigate = App.navigateTo.bind(App);
+
+  App.navigateTo = function (pageName) {
+    if (pageName === 'home') {
+      window.location.href = PORTFOLIO;
+      return;
+    }
+    origNavigate(pageName);
+  };
+
+  App.init = function () {
+    App.initNavbar();
+    App.navigateTo('about');
+  };
+})();
+</script>
+
+</body>
+</html>

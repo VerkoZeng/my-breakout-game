@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Verko · 棋</title>
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- ===== 导航栏 ===== -->
+  <div class="navbar">
+    <button class="navbar-back" id="navbar-back">&larr; 主页</button>
+    <span class="navbar-title" id="navbar-title">Verko 象棋</span>
+    <button class="navbar-rules" id="navbar-rules" title="规则">?</button>
+  </div>
+
+  <!-- ===== 中国象棋页面 ===== -->
+  <div class="page" id="page-chess">
+    <div class="game-container">
+      <div class="game-header">
+        <div class="game-info"><span class="game-status" id="chess-status">红方走棋</span></div>
+        <div class="game-actions">
+          <button class="btn btn-sm" id="chess-undo">悔棋</button>
+          <button class="btn btn-sm btn-primary" id="chess-restart">重新开始</button>
+        </div>
+      </div>
+      <div class="ai-controls">
+        <button class="btn btn-xs" id="chess-ai-red">红方电脑</button>
+        <button class="btn btn-xs" id="chess-diff-down">-</button>
+        <span class="diff-display" id="chess-diff-display">中等</span>
+        <button class="btn btn-xs" id="chess-diff-up">+</button>
+        <button class="btn btn-xs" id="chess-ai-black">黑方电脑</button>
+      </div>
+      <canvas id="chess-canvas" class="game-board" style="background:#f0d9a0;"></canvas>
+    </div>
+    <div class="rules-panel" id="chess-rules-panel">
+      <div class="rules-overlay" id="chess-rules-overlay"></div>
+      <div class="rules-content">
+        <h3>中国象棋规则</h3>
+        <p><strong>一、棋盘与棋子</strong></p>
+    <p>· 棋盘由 9 条竖线和 10 条横线组成，共 90 个交叉点。</p>
+    <p>· 中间"楚河汉界"将棋盘分为红方（下方）和黑方（上方）两个阵营。</p>
+    <p>· 双方各有 16 枚棋子：帅/将、仕/士、相/象、马、车、炮、兵/卒。</p>
+    <p></p>
+    <p><strong>二、走棋顺序</strong></p>
+    <p>· 红方先行，双方轮流走棋，每次移动一枚己方棋子。</p>
+    <p>· 点击己方棋子可选中，再点击目标位置完成走棋。</p>
+    <p>· 绿色圆点提示该棋子的所有合法走法。</p>
+    <p></p>
+    <p><strong>三、棋子走法</strong></p>
+    <p>· 帅/将：九宫内直走一格。</p>
+    <p>· 仕/士：九宫内斜走一格。</p>
+    <p>· 相/象：田字斜走，不能过河，塞象眼则不能走。</p>
+    <p>· 马：日字走法，蹩马腿则不能走。</p>
+    <p>· 车：直线任意距离，遇子则止。</p>
+    <p>· 炮：直线走，吃时必须隔一子（炮架）。</p>
+    <p>· 兵/卒：过河前只能前进，过河后可前进或横走。</p>
+    <p></p>
+    <p><strong>四、吃子规则</strong></p>
+    <p>· 走棋至对方棋子所在位置即可吃掉该子。</p>
+    <p>· 不能吃掉己方棋子。</p>
+    <p>· 走完后己方不能被"将"，否则该走法不合法。</p>
+    <p></p>
+    <p><strong>五、将军与将杀</strong></p>
+    <p>· "将军"：一方走棋后威胁吃掉对方的将/帅。</p>
+    <p>· "应将"：被将的一方必须立即化解，否则输棋。</p>
+    <p>· "将杀"：无法应将即为将杀，该方告负。</p>
+    <p>· "困毙"：轮到走棋但无合法走法（未被将）也为输。</p>
+    <p>· "飞将"：两将/帅之间无棋子对面相视，视为将军。</p>
+    <p></p>
+    <p><strong>六、胜负判定</strong></p>
+    <p>· 将杀或困毙对方 → 获胜。</p>
+    <p>· 对方认输 → 获胜。</p>
+    <p></p>
+    <p><strong>七、操作说明</strong></p>
+    <p>· 点击己方棋子选中（金色高亮），再点击目标位置移动。</p>
+    <p>· 绿色圆点标示当前棋子的合法走法。</p>
+    <p>· 悔棋：撤销上一步操作。</p>
+    <p>· 重新开始：重置棋盘，重新开局。</p>
+        <p style="margin-top:12px;"><button class="btn btn-primary btn-sm" id="chess-rules-close">关闭</button></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 围棋页面 ===== -->
+  <div class="page" id="page-weiqi">
+    <div class="game-container">
+      <div class="game-header">
+        <div class="game-info"><span class="game-status" id="weiqi-status">黑方执先</span></div>
+        <div class="game-actions">
+          <button class="btn btn-sm" id="weiqi-pass">虚手</button>
+          <button class="btn btn-sm" id="weiqi-resign">认输</button>
+          <button class="btn btn-sm" id="weiqi-undo">悔棋</button>
+          <button class="btn btn-sm btn-primary" id="weiqi-restart">重新开始</button>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin:8px 0;">
+        <span class="weiqi-captured-black" style="font-size:12px;">提子: 0</span>
+        <span class="weiqi-captured-white" style="font-size:12px;">提子: 0</span>
+      </div>
+      <div class="ai-controls">
+        <button class="btn btn-xs" id="weiqi-ai-black">黑方电脑</button>
+        <button class="btn btn-xs" id="weiqi-diff-down">-</button>
+        <span class="diff-display" id="weiqi-diff-display">中等</span>
+        <button class="btn btn-xs" id="weiqi-diff-up">+</button>
+        <button class="btn btn-xs" id="weiqi-ai-white">白方电脑</button>
+      </div>
+      <canvas id="weiqi-canvas" class="game-board" style="background:#e8c870;"></canvas>
+    </div>
+    <div class="rules-panel" id="weiqi-rules-panel">
+      <div class="rules-overlay" id="weiqi-rules-overlay"></div>
+      <div class="rules-content">
+        <h3>围棋规则</h3>
+        <p><strong>一、棋盘与棋子</strong></p>
+    <p>· 标准 19×19 路棋盘，共 361 个交叉点。</p>
+    <p>· 黑方持 181 枚黑子，白方持 180 枚白子。</p>
+    <p>· 棋子下在交叉点上，落子无悔。</p>
+    <p></p>
+    <p><strong>二、基本规则</strong></p>
+    <p>· 黑方先下，双方轮流落子，每次下一子。</p>
+    <p>· 棋子一旦落在棋盘上，不得移动。</p>
+    <p>· 可在任意空交叉点落子（禁着点除外）。</p>
+    <p></p>
+    <p><strong>三、气与提子</strong></p>
+    <p>· 与棋子直线相连的空交叉点称为"气"。</p>
+    <p>· 当棋子（或棋串）的所有气被对方堵住时，该棋子被提走。</p>
+    <p>· 提掉的棋子称为"提子"，在状态栏显示双方提子数。</p>
+    <p></p>
+    <p><strong>四、禁着点（自杀）</strong></p>
+    <p>· 落子后己方棋子无气且无法提掉对方 → 禁止落子。</p>
+    <p>· 系统会自动拦截自杀行为并提示。</p>
+    <p></p>
+    <p><strong>五、打劫规则</strong></p>
+    <p>· 当一方提掉对方一子后，对方不能立即回提同一位置。</p>
+    <p>· 须先在别处走一手，待对方应后，方可回提。</p>
+    <p>· 系统会拦截立即回提的行为并提示"禁止打劫"。</p>
+    <p></p>
+    <p><strong>六、虚手与终局</strong></p>
+    <p>· 无棋可下时可选择"虚手"（过一手）。</p>
+    <p>· 双方连续虚手 → 终局，系统自动计分。</p>
+    <p>· 亦可点击"认输"直接结束对局。</p>
+    <p></p>
+    <p><strong>七、计分规则（中国规则数子法）</strong></p>
+    <p>· 终局后统计双方围住的空点（目数）。</p>
+    <p>· 得分 = 棋盘上己方棋子数 + 围住的空点数。</p>
+    <p>· 白方贴目 7.5 子（补偿黑方先行优势）。</p>
+    <p>· 得分高者获胜。</p>
+    <p></p>
+    <p><strong>八、操作说明</strong></p>
+    <p>· 点击棋盘交叉点落子。</p>
+    <p>· 虚手：放弃一手，轮到对方。</p>
+    <p>· 认输：当前方认输，对方获胜。</p>
+    <p>· 悔棋：撤销上一步操作。</p>
+    <p>· 重开：重置棋盘，重新开始。</p>
+        <p style="margin-top:12px;"><button class="btn btn-primary btn-sm" id="weiqi-rules-close">关闭</button></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 国际象棋页面 ===== -->
+  <div class="page" id="page-intlchess">
+    <div class="game-container">
+      <div class="game-header">
+        <div class="game-info"><span class="game-status" id="intlchess-status">白方走棋</span></div>
+        <div class="game-actions">
+          <button class="btn btn-sm" id="intlchess-undo">悔棋</button>
+          <button class="btn btn-sm btn-primary" id="intlchess-restart">重新开始</button>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin:8px 0;">
+        <div class="captured-pieces" id="intlchess-captured-white"></div>
+        <div class="captured-pieces" id="intlchess-captured-black"></div>
+      </div>
+      <div class="ai-controls">
+        <button class="btn btn-xs" id="intlchess-ai-white">白方电脑</button>
+        <button class="btn btn-xs" id="intlchess-diff-down">-</button>
+        <span class="diff-display" id="intlchess-diff-display">中等</span>
+        <button class="btn btn-xs" id="intlchess-diff-up">+</button>
+        <button class="btn btn-xs" id="intlchess-ai-black">黑方电脑</button>
+      </div>
+      <canvas id="intlchess-canvas" class="game-board" style="background:#f0d9b5;"></canvas>
+    </div>
+    <div class="rules-panel" id="intlchess-rules-panel">
+      <div class="rules-overlay" id="intlchess-rules-overlay"></div>
+      <div class="rules-content">
+        <h3>国际象棋规则</h3>
+    <p><strong>一、棋盘与棋子</strong></p>
+        <p>· 棋盘由 8×8 共 64 个黑白相间的方格组成。</p>
+        <p>· 白方（下方）先行，双方各有 16 枚棋子。</p>
+        <p>· 每方：王×1、后×1、车×2、象×2、马×2、兵×8。</p>
+    <p><strong>二、棋子走法</strong></p>
+        <p>· 兵(♟♙)：首次可走两格，斜前方吃子。到底线升变为后。</p>
+        <p>· 马(♞♘)：L形跳跃（2+1），无视障碍。</p>
+        <p>· 象(♝♗)：斜线任意距离。</p>
+        <p>· 车(♜♖)：直线任意距离，参与王车易位。</p>
+        <p>· 后(♛♕)：直线+斜线任意距离。</p>
+        <p>· 王(♚♔)：周围一格，可与车易位（未移动过且不被将军）。</p>
+        <p>· 吃过路兵：对方兵首步走两格经过己方兵攻击格时可吃。</p>
+    <p><strong>三、特殊规则</strong></p>
+        <p>· 王车易位：王与车各未移动、中间无子、未被将军时，王向车移动两格，车越过王。</p>
+        <p>· 吃过路兵：兵走两格后，相邻的对方兵可斜进吃掉它（仅限立即应手）。</p>
+        <p>· 兵升变：兵到达对方底线时自动升变为后。</p>
+        <p></p>
+    <p><strong>四、将军与将杀</strong></p>
+        <p>· "将军"：一方棋子威胁吃掉对方王。</p>
+        <p>· "应将"：被将时必须应将（移动王、吃掉威胁棋子、垫将）。</p>
+        <p>· "将杀"：无法应将则为将杀，该方告负。</p>
+        <p>· "逼和"：轮到走棋但无合法走法且未被将军 → 和棋。</p>
+        <p></p>
+    <p><strong>五、胜负与和棋</strong></p>
+        <p>· 将杀对方 → 获胜。</p>
+        <p>· 对方认输 → 获胜。</p>
+        <p>· 逼和 → 和棋。</p>
+        <p></p>
+    <p><strong>六、操作说明</strong></p>
+        <p>· 点击己方棋子选中（黄色高亮），再点击目标格移动。</p>
+        <p>· 绿色圆点提示该棋子的合法走法。</p>
+        <p>· 最后一步走棋的格子以高亮标识。</p>
+        <p>· 右侧显示双方被吃的棋子。</p>
+        <p>· 悔棋：撤销上一步操作。</p>
+        <p>· 重开：重置棋盘，重新开局。</p>
+        <p style="margin-top:12px;"><button class="btn btn-primary btn-sm" id="intlchess-rules-close">关闭</button></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="version-mark">—————————— Verko ——————————</div>
+
+  <!-- ===== 底部导航：仅保留 象棋 / 围棋 / 国象 三个切页 ===== -->
+  <div class="tab-bar">
+    <button class="tab-item active" data-page="chess">
+      <span class="tab-icon">⚄</span>象棋
+    </button>
+    <button class="tab-item" data-page="weiqi">
+      <span class="tab-icon">₪</span>围棋
+    </button>
+    <button class="tab-item" data-page="intlchess">
+      <span class="tab-icon">♙</span>国象
+    </button>
+  </div>
+
+</div>
+
+<!-- ===== JS 脚本（复用父目录资源，路径上溯一级） ===== -->
+<script src="../js/app.js"></script>
+<script src="../js/ai-engine.js"></script>
+<script src="../js/chess-ai.js"></script>
+<script src="../js/chess-chinese.js"></script>
+<script src="../js/chess-go.js"></script>
+<script src="../js/chess-international.js"></script>
+<script src="../js/lingjing-gesture-guard.js"></script>
+
+<script>
+/* ============================================================
+ * 无主页子站的路由引导
+ * app.js 的 App.init() 硬编码 navigateTo('home')，本页无 home，
+ * 故自行接管 init：绑定导航/tab 后直接落默认页 'chess'。
+ * 返回键沿用 app.js 的 "回 home" 语义 —— 在此重定义为回作品集首页。
+ * ============================================================ */
+(function () {
+  'use strict';
+
+  var DEFAULT_PAGE = 'chess';
+  var PAGE_TITLES = {
+    chess: '象棋',
+    weiqi: '围棋',
+    intlchess: '国际象棋'
+  };
+  var PORTFOLIO = '../index.html';
+
+  var origNavigate = App.navigateTo.bind(App);
+
+  // 接管切页：'home' 重定义为返回作品集；其余走原逻辑并覆盖标题
+  App.navigateTo = function (pageName) {
+    if (pageName === 'home') {
+      window.location.href = PORTFOLIO;
+      return;
+    }
+    origNavigate(pageName);
+    var titleEl = document.getElementById('navbar-title');
+    if (titleEl && PAGE_TITLES[pageName]) titleEl.textContent = PAGE_TITLES[pageName];
+  };
+
+  // 接管引导：不经过 home，直接进默认页
+  App.init = function () {
+    App.initNavbar();   // 返回键 → navigateTo('home') → 回作品集
+    App.initTabs();     // 底部 3 个 tab 切页
+    App.navigateTo(DEFAULT_PAGE);
+  };
+})();
+</script>
+
+</body>
+</html>
