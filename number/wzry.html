@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>战斗数值 · 《王者荣耀》WZRY</title>
+<style>
+  :root{
+    --bg:#0f1218; --bg2:#161b24; --bg3:#12171f; --line:#242c39; --line2:#2d3648;
+    --fg:#e6eaf2; --dim:#95a0b3; --faint:#77828f;
+    --gold:#d9b06a; --blue:#6fb4ff; --green:#5fcf9a; --red:#f07a72; --violet:#a78bfa;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--bg); color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:15px; line-height:1.72; -webkit-font-smoothing:antialiased}
+  .wrap{max-width:900px; margin:0 auto; padding:52px 26px 72px}
+
+  header{border-bottom:1px solid var(--line); padding-bottom:22px; margin-bottom:30px}
+  .eyebrow{color:var(--gold); font-size:12.5px; letter-spacing:.22em; margin:0 0 10px}
+  h1{margin:0 0 12px; font-size:31px; font-weight:650; letter-spacing:.01em; line-height:1.3}
+  .code{display:inline-block; margin-left:10px; padding:2px 9px; border:1px solid rgba(217,176,106,.45);
+    border-radius:5px; color:var(--gold); font-size:13px; font-weight:500; vertical-align:5px; letter-spacing:.08em}
+  .sub{margin:0; color:var(--dim); font-size:13.5px; line-height:1.75}
+
+  h2{font-size:18.5px; font-weight:600; margin:46px 0 15px; padding-left:11px;
+    border-left:3px solid var(--gold); line-height:1.45; scroll-margin-top:20px}
+  h3{font-size:15.5px; font-weight:600; margin:26px 0 10px; color:#fff}
+  p{margin:0 0 14px}
+  strong{color:#fff; font-weight:600}
+
+  /* 顶部统计条 */
+  .stats{display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin:0 0 10px}
+  .stat{background:var(--bg2); border:1px solid var(--line); border-radius:8px; padding:14px 8px; text-align:center}
+  .stat b{display:block; font-size:22px; font-weight:650; color:var(--gold); line-height:1.25;
+    letter-spacing:.01em; font-variant-numeric:tabular-nums}
+  .stat span{display:block; margin-top:5px; font-size:11.5px; color:var(--dim); letter-spacing:.03em}
+
+  /* 页内导航 */
+  .toc{display:flex; flex-wrap:wrap; gap:7px; margin:18px 0 0}
+  .toc a{border:1px solid var(--line); border-radius:20px; padding:3px 11px; font-size:12.3px;
+    color:#c3cbd9; text-decoration:none; background:var(--bg2); transition:border-color .15s,color .15s}
+  .toc a:hover{border-color:rgba(111,180,255,.55); color:var(--blue)}
+
+  /* 流水线 */
+  .pipe{display:grid; gap:10px; margin:0 0 16px}
+  .step{display:grid; grid-template-columns:34px 1fr; gap:14px; align-items:start;
+    background:var(--bg2); border:1px solid var(--line); border-radius:8px; padding:14px 16px}
+  .step .no{width:34px; height:34px; border-radius:50%; border:1px solid rgba(217,176,106,.4);
+    color:var(--gold); font-size:14px; font-weight:600; display:flex; align-items:center; justify-content:center;
+    font-variant-numeric:tabular-nums}
+  .step .body > b{display:block; font-size:14.5px; color:#fff; margin-bottom:3px}
+  .step .body span b{color:#fff; font-weight:600}
+  .step .body span{display:block; font-size:13.3px; color:#b9c3d3; line-height:1.68}
+  .step .body .fx{margin-top:6px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12.9px; color:var(--blue)}
+  .step.hot{border-color:rgba(240,122,114,.4); background:#181419}
+
+  /* 表格 */
+  table{width:100%; border-collapse:collapse; margin:0 0 12px; font-size:13.4px}
+  th,td{text-align:left; padding:9px 11px; border-bottom:1px solid var(--line); vertical-align:top}
+  th{color:var(--dim); font-weight:500; font-size:12.5px; letter-spacing:.04em; background:rgba(255,255,255,.018)}
+  td.num{text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap}
+  tbody tr:hover{background:rgba(255,255,255,.022)}
+  .ok{color:var(--green)} .bad{color:var(--red)} .warn{color:var(--gold)} .vi{color:var(--violet)}
+
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.6px;
+    background:#1d2432; border:1px solid #2a3346; border-radius:4px; padding:1px 5px; color:#cfd8e6;
+    line-height:1.5; white-space:nowrap}
+
+  /* 图 */
+  figure{margin:0 0 16px; background:var(--bg2); border:1px solid var(--line); border-radius:9px; padding:14px 12px 8px}
+  figure svg{display:block; width:100%; height:auto}
+  figcaption{margin:8px 4px 0; font-size:12.3px; color:var(--faint); line-height:1.65}
+  figcaption b{color:var(--dim); font-weight:500}
+  .legend{display:flex; flex-wrap:wrap; gap:14px; margin:0 4px 6px; font-size:12.3px; color:var(--dim)}
+  .legend i{display:inline-block; width:16px; height:2.5px; border-radius:2px; margin-right:6px; vertical-align:3px}
+
+  /* 提示框 */
+  .note{background:var(--bg3); border:1px solid var(--line); border-left:3px solid var(--blue);
+    border-radius:7px; padding:14px 17px; font-size:13.2px; color:#b9c3d3; line-height:1.75; margin:0 0 14px}
+  .note b{color:var(--blue); font-weight:600}
+  .note.gold{border-left-color:var(--gold)} .note.gold b{color:var(--gold)}
+  .note.red{border-left-color:var(--red)} .note.red b{color:var(--red)}
+
+  /* 定义列表：结论 + 验证 + 公式 + 数字 */
+  dl.kv{display:grid; grid-template-columns:88px 1fr; gap:0; margin:0 0 14px;
+    border:1px solid var(--line); border-radius:8px; overflow:hidden; background:var(--bg2)}
+  dl.kv dt{padding:11px 12px; font-size:12.3px; color:var(--dim); background:rgba(255,255,255,.018);
+    border-bottom:1px solid var(--line); letter-spacing:.03em}
+  dl.kv dd{margin:0; padding:11px 14px; font-size:13.3px; color:#c9d2df; border-bottom:1px solid var(--line);
+    line-height:1.68}
+  dl.kv dt:last-of-type, dl.kv dd:last-of-type{border-bottom:0}
+
+  /* 攻速阶梯 */
+  .ladder{background:var(--bg2); border:1px solid var(--line); border-radius:9px; padding:14px 16px; margin:0 0 14px}
+  .ladder .row{display:grid; grid-template-columns:52px 1fr 82px 62px; gap:10px; align-items:center;
+    padding:3px 0; font-size:12.6px}
+  .ladder .row .f{color:var(--dim); font-variant-numeric:tabular-nums; text-align:right}
+  .ladder .bar{height:13px; background:#1b2130; border-radius:3px; overflow:hidden}
+  .ladder .bar i{display:block; height:100%; border-radius:3px;
+    background:linear-gradient(90deg,rgba(111,180,255,.45),rgba(111,180,255,.85))}
+  .ladder .row.top .bar i{background:linear-gradient(90deg,rgba(217,176,106,.5),rgba(217,176,106,.95))}
+  .ladder .row .t{font-variant-numeric:tabular-nums; color:#c9d2df; text-align:right}
+  .ladder .row .d{font-variant-numeric:tabular-nums; color:var(--faint); text-align:right}
+  .ladder .head{display:grid; grid-template-columns:52px 1fr 82px 62px; gap:10px;
+    padding-bottom:6px; margin-bottom:4px; border-bottom:1px solid var(--line);
+    font-size:11.6px; color:var(--faint); letter-spacing:.04em}
+  .ladder .head span:first-child, .ladder .head span:nth-child(3){text-align:right}
+  .ladder .head span:last-child{text-align:right}
+
+  /* 计算器 */
+  .calc{background:var(--bg2); border:1px solid var(--line2); border-radius:10px; padding:18px 20px; margin:0 0 14px}
+  .calc .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px 14px; margin-bottom:16px}
+  .field label{display:block; font-size:12px; color:var(--dim); margin-bottom:4px; letter-spacing:.03em}
+  .field input{width:100%; background:#101620; border:1px solid var(--line2); border-radius:6px;
+    color:var(--fg); font-size:14px; padding:7px 10px; font-variant-numeric:tabular-nums;
+    font-family:inherit; outline:none; transition:border-color .15s}
+  .field input:focus{border-color:rgba(111,180,255,.6)}
+  .out{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding-top:14px;
+    border-top:1px solid var(--line)}
+  .out div{text-align:center}
+  .out b{display:block; font-size:20px; font-weight:650; color:var(--gold); font-variant-numeric:tabular-nums;
+    line-height:1.3}
+  .out b.g{color:var(--green)} .out b.b{color:var(--blue)} .out b.r{color:var(--red)}
+  .out span{display:block; margin-top:3px; font-size:11.5px; color:var(--dim)}
+  .calc .verdict{margin-top:12px; font-size:13px; color:#b9c3d3; line-height:1.68;
+    padding-top:12px; border-top:1px solid var(--line)}
+  .calc .verdict em{color:var(--gold); font-style:normal; font-weight:600}
+
+  .pills{display:flex; flex-wrap:wrap; gap:7px; margin:2px 0 0}
+  .pill{border:1px solid var(--line); border-radius:20px; padding:3px 11px; font-size:12.3px;
+    color:#c3cbd9; background:var(--bg2)}
+  .pill i{font-style:normal; color:var(--dim)}
+
+  .links{display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin:0 0 14px}
+  .link{background:var(--bg2); border:1px solid var(--line); border-radius:8px; padding:14px 16px;
+    transition:border-color .16s, background .16s}
+  .link:hover{border-color:rgba(111,180,255,.5); background:#181e28}
+  .link b{display:block; font-size:14.2px; font-weight:600; margin-bottom:4px}
+  .link b a{color:var(--fg); text-decoration:none}
+  .link b a:hover{color:var(--blue)}
+  .link span{display:block; color:var(--dim); font-size:12.9px; line-height:1.6}
+
+  footer{margin-top:50px; padding-top:20px; border-top:1px solid var(--line); color:var(--faint);
+    font-size:12.3px; line-height:1.85}
+  footer a{color:#8b96a6; text-decoration:none}
+  footer a:hover{color:var(--blue)}
+
+  @media (max-width:760px){
+    .wrap{padding:34px 16px 56px}
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .calc .grid{grid-template-columns:repeat(2,1fr)}
+    .out{grid-template-columns:repeat(2,1fr); gap:14px 10px}
+    .links{grid-template-columns:1fr}
+    dl.kv{grid-template-columns:74px 1fr}
+    .ladder .row,.ladder .head{grid-template-columns:40px 1fr 70px 52px; gap:7px; font-size:11.8px}
+    h1{font-size:24px}
+    table{font-size:12.6px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">WZRY · 战斗数值</p>
+    <h1>一次普攻<span class="code">WZRY</span></h1>
+    <p class="sub">从一条常数 602 的式子，推到「该出甲还是出装、该带百穿还是碎星锤」<br>
+       更新时点 2026-11 ｜ 版本 12.1.1.1 / S45「月照长安」
+
+    <div class="toc">
+      <a href="#pipe">流水线</a>
+      <a href="#mit">减伤映射</a>
+      <a href="#three">三种递减</a>
+      <a href="#ehp">等效血量</a>
+      <a href="#pen">穿透交点</a>
+      <a href="#as">攻速档位</a>
+      <a href="#ms">移速折线</a>
+      <a href="#cap">上限清单</a>
+      <a href="#calc">实算器</a>
+      <a href="#verify">验证与边界</a>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><b>602</b><span>物防法防共用常数</span></div>
+    <div class="stat"><b>4</b><span>伤害结算段</span></div>
+    <div class="stat"><b>250</b><span>穿透分界护甲</span></div>
+    <div class="stat"><b>11</b><span>攻速档位（帧）</span></div>
+    <div class="stat"><b>23/24</b><span>官方样本命中</span></div>
+  </div>
+
+  <div class="note gold">
+    <b>一句话结论。</b>伤害 = 原始伤害 × (1 − 护甲减免) × (1 − 英雄免伤) − 格挡，其中护甲减免
+    <code>m = N/(N+602)</code>，<code>N</code> 是穿透后的有效护甲。这条式子把「堆甲 / 堆血 / 穿透」
+    三件事压成三个可解的比较：<strong>免伤率的边际在掉，等效血量的边际是常数</strong>，
+    而<strong>两种穿透的分界点只由「固定穿透值 ÷ 百分比」决定，与 602 无关</strong>。
+  </div>
+
+  <!-- ========================================================= 流水线 -->
+  <h2 id="pipe">一、四段结算：哪一步能换、哪一步不能换</h2>
+  <p>完整链路是四步，但<strong>「顺序不能换」这句话只对其中两处成立</strong>。先把结构摆清楚，再谈顺序。</p>
+
+  <div class="pipe">
+    <div class="step">
+      <div class="no">1</div>
+      <div class="body">
+        <b>原始伤害 s</b>
+        <span>技能面板值 × 加成系数。这一段是纯乘法，与防御体系无关。</span>
+        <div class="fx">s = 面板值 + 系数 × 属性</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="no">2</div>
+      <div class="body">
+        <b>护甲减免 m</b>
+        <span>先把防御折算成比例。<b>物理与法术同式同常数</b>，只是代入的防御值不同。</span>
+        <div class="fx">N = (DEF − FIX) × (1 − PCT)　　m = N / (N + 602)</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="no">3</div>
+      <div class="body">
+        <b>英雄 / 装备免伤 (1 − DR)</b>
+        <span>独立乘区。样本取纯净苍穹主动的 30%。与第 2 段是<strong>纯乘法关系</strong>。</span>
+        <div class="fx">(1 − DR)，DR 上限 90%</div>
+      </div>
+    </div>
+    <div class="step hot">
+      <div class="no">4</div>
+      <div class="body">
+        <b>格挡 − BLK</b>
+        <span>数值型减法，是<strong>唯一一个加法项</strong>。正因为是加法，它的位置一变，效果就变。</span>
+        <div class="fx">最终 = s × (1 − m) × (1 − DR) − BLK</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note red">
+    <b>「顺序不能换」的准确版本。</b>第 2 段与第 3 段都是乘数，乘法可交换——先算免伤再算护甲，
+    结果一模一样。真正不能换的是两处：<br>
+    ① <strong>穿透必须作用在「防御值」上，不能作用在「最终伤害」上</strong>。100 点固定穿透若当成
+    「最终伤害 +100」，与「把对面 100 甲清零」是两件完全不同的事。<br>
+    ② <strong>格挡必须放在最后</strong>。同一个 100 点格挡：放最后是 <code>500.83 − 100 = 400.83</code>；
+    放到乘区之前是 <code>(1000 − 100) × 0.50083 = 450.75</code>，两者差 <span class="bad">49.92</span>。
+  </div>
+
+  <p>一个能一眼看懂的算例（<code>s=1000</code>、<code>DEF=600</code>、百穿 + 40% 穿、<code>DR=30%</code>）：</p>
+  <dl class="kv">
+    <dt>有效护甲</dt><dd><code>N = (600 − 100) × 0.6 = 300</code></dd>
+    <dt>护甲减免</dt><dd><code>m = 300/902 = 33.26%</code>，承伤系数 0.66740</dd>
+    <dt>免伤</dt><dd><code>× (1 − 0.30) = 0.70</code></dd>
+    <dt>最终</dt><dd><code>1000 × 0.66740 × 0.70 = 467.18</code>　（同参数下无穿透为 <span class="warn">350.58</span>，穿透带来 <span class="ok">+33.3%</span>）</dd>
+  </dl>
+
+  <!-- ========================================================= 减伤映射 -->
+  <h2 id="mit">二、减伤映射：一个常数统治两种防御</h2>
+  <p>整条链路里只有一个经验常数：<code>m = N/(N+602)</code>。它同时命中物理与法术两个官方样本——
+  这是本作在战斗数值上最省的一个建模决定，一种防御不需要两套参数。</p>
+
+  <figure>
+    <div class="legend">
+      <span><i style="background:#6fb4ff"></i>免伤率 m(D)</span>
+      <span><i style="background:#d9b06a"></i>官方两个样本点</span>
+    </div>
+    <svg viewBox="0 0 720 300" role="img" aria-label="护甲减免率随防御值变化的凹函数曲线">
+      <g transform="translate(60,40)">
+        <!-- 网格 -->
+        <line x1="0" y1="0" x2="0" y2="200" stroke="#2a3346" stroke-width="1"/>
+        <line x1="0" y1="200" x2="620" y2="200" stroke="#2a3346" stroke-width="1"/>
+        <g stroke="#1f2734" stroke-width="1">
+          <line x1="124" y1="0" x2="124" y2="200"/>
+          <line x1="248" y1="0" x2="248" y2="200"/>
+          <line x1="372" y1="0" x2="372" y2="200"/>
+          <line x1="496" y1="0" x2="496" y2="200"/>
+        </g>
+        <g stroke="#1f2734" stroke-width="1" stroke-dasharray="3 4">
+          <line x1="0" y1="50" x2="620" y2="50"/>
+          <line x1="0" y1="100" x2="620" y2="100"/>
+          <line x1="0" y1="150" x2="620" y2="150"/>
+        </g>
+        <!-- 曲线 -->
+        <polyline fill="none" stroke="#6fb4ff" stroke-width="2.2" stroke-linejoin="round"
+          points="0.0,200.0 6.2,192.0 12.4,184.4 18.6,177.3 24.8,170.7 31.0,164.4 37.2,158.4 43.4,152.8 49.6,147.5 55.8,142.5 62.0,137.7 68.2,133.1 74.4,128.7 80.6,124.6 86.8,120.6 93.0,116.9 99.2,113.2 105.4,109.8 111.6,106.4 117.8,103.3 124.0,100.2 130.2,97.3 136.4,94.4 142.6,91.7 148.8,89.1 155.0,86.6 161.2,84.1 167.4,81.8 173.6,79.5 179.8,77.3 186.0,75.2 192.2,73.2 198.4,71.2 204.6,69.3 210.8,67.4 217.0,65.6 223.2,63.8 229.4,62.1 235.6,60.5 241.8,58.9 248.0,57.3 254.2,55.8 260.4,54.4 266.6,52.9 272.8,51.6 279.0,50.2 285.2,48.9 291.4,47.6 297.6,46.4 303.8,45.1 310.0,43.9 316.2,42.8 322.4,41.7 328.6,40.6 334.8,39.5 341.0,38.4 347.2,37.4 353.4,36.4 359.6,35.4 365.8,34.5 372.0,33.5 378.2,32.6 384.4,31.7 390.6,30.8 396.8,30.0 403.0,29.1 409.2,28.3 415.4,27.5 421.6,26.7 427.8,25.9 434.0,25.2 440.2,24.4 446.4,23.7 452.6,23.0 458.8,22.3 465.0,21.6 471.2,20.9 477.4,20.3 483.6,19.6 489.8,19.0 496.0,18.3 502.2,17.7 508.4,17.1 514.6,16.5 520.8,16.0 527.0,15.4 533.2,14.8 539.4,14.3 545.6,13.7 551.8,13.2 558.0,12.7 564.2,12.1 570.4,11.6 576.6,11.1 582.8,10.6 589.0,10.2 595.2,9.7 601.4,9.2 607.6,8.7 613.8,8.3 620.0,7.8"/>
+        <!-- 样本点 -->
+        <circle cx="222.9" cy="63.9" r="4.2" fill="#d9b06a"/>
+        <circle cx="279.0" cy="50.2" r="4.2" fill="#d9b06a"/>
+        <text x="212" y="58" fill="#d9b06a" font-size="11.5" text-anchor="end">719 → 54.43%</text>
+        <text x="292" y="76" fill="#d9b06a" font-size="11.5" text-anchor="start">900 → 59.92%</text>
+        <!-- 轴标签 -->
+        <g fill="#77828f" font-size="11.5">
+          <text x="0" y="218" text-anchor="middle">0</text>
+          <text x="124" y="218" text-anchor="middle">400</text>
+          <text x="248" y="218" text-anchor="middle">800</text>
+          <text x="372" y="218" text-anchor="middle">1200</text>
+          <text x="496" y="218" text-anchor="middle">1600</text>
+          <text x="620" y="218" text-anchor="middle">2000</text>
+          <text x="620" y="238" text-anchor="end">防御值</text>
+        </g>
+        <g fill="#77828f" font-size="11.5" text-anchor="end">
+          <text x="-8" y="4">80%</text>
+          <text x="-8" y="54">60%</text>
+          <text x="-8" y="104">40%</text>
+          <text x="-8" y="154">20%</text>
+          <text x="-8" y="204">0</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption><b>凹函数。</b>单调递增，但导数 <code>dm/dN = 602/(N+602)²</code> 随 N 递减 ——
+      这条曲率就是全部出装逻辑的来源。</figcaption>
+  </figure>
+
+  <table>
+    <thead><tr><th>防御值</th><th class="num">免伤率 m</th><th class="num">承伤系数</th><th>备注</th></tr></thead>
+    <tbody>
+      <tr><td class="num">0</td><td class="num">0.00%</td><td class="num">1.0000</td><td>裸装</td></tr>
+      <tr><td class="num">100</td><td class="num">14.25%</td><td class="num">0.8575</td><td>百穿刚好清零的那一档</td></tr>
+      <tr><td class="num">250</td><td class="num">29.34%</td><td class="num">0.7066</td><td>两种穿透的分界（见第五节）</td></tr>
+      <tr><td class="num">600</td><td class="num">49.92%</td><td class="num">0.5008</td><td>刚跨过「承伤减半」线</td></tr>
+      <tr><td class="num">719</td><td class="num">54.43%</td><td class="num">0.4557</td><td>官方样本 B（标注 54.5%）</td></tr>
+      <tr><td class="num">900</td><td class="num">59.92%</td><td class="num">0.4008</td><td>官方样本 A（标注 60%）</td></tr>
+      <tr><td class="num">1400</td><td class="num">69.93%</td><td class="num">0.3007</td><td>六件防装的量级</td></tr>
+      <tr><td class="num">2000</td><td class="num">76.86%</td><td class="num">0.2314</td><td>仍到不了 100% —— 凹函数天然封顶</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ========================================================= 三种递减 -->
+  <h2 id="three">三、同一个「+100 甲」，三种递减速度</h2>
+  <p>这是本页最要紧的一处纠偏。<strong>「堆甲收益递减」这句话没错，但「递减多少」取决于你拿哪个量去量</strong>——
+  而这三个量的答案差了 3 倍。拿错那把尺，平衡就会做错。</p>
+
+  <table>
+    <thead><tr><th>起手防御</th><th class="num">免伤率的 pp 增量</th><th class="num">等效血量的相对增量</th><th class="num">两者之比</th></tr></thead>
+    <tbody>
+      <tr><td class="num">0 → 100</td><td class="num">+14.25 pp</td><td class="num">+16.61%</td><td class="num">0.86</td></tr>
+      <tr><td class="num">400 → 500</td><td class="num">+5.45 pp</td><td class="num">+9.98%</td><td class="num">0.55</td></tr>
+      <tr><td class="num">900 → 1000</td><td class="num">+2.50 pp</td><td class="num">+6.66%</td><td class="num">0.38</td></tr>
+      <tr><td class="num">1400 → 1500</td><td class="num">+1.43 pp</td><td class="num">+5.00%</td><td class="num">0.29</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <b>从 0 甲走到 1400 甲，同样是 +100 甲：</b>免伤率的 pp 增量衰减了 <strong>9.96 倍</strong>
+    （14.25 → 1.43），而等效血量的相对增量只衰减了 <strong>3.33 倍</strong>（16.61% → 5.00%）。
+    <br>原因是这两个量的分母不同：pp 是<strong>绝对差</strong>，分母恒为 1；相对增量是<strong>比值</strong>，
+    分母是已经长大的 EHP 本身。所以面板免伤率的「衰减感」被放大了约 3 倍。
+    <br><strong>设计含义：</strong>如果按面板免伤率去判断高甲段的强度，会系统性地低估它——
+    把「1400 甲再加 100」看成「几乎没用」（+1.43pp），而它实际换来的是 5% 的额外生存时间。
+  </div>
+
+  <!-- ========================================================= EHP -->
+  <h2 id="ehp">四、等效血量：凹的对偶是线性</h2>
+  <p><code>m(N)</code> 是凹的，但把 m 反解成「能扛多久」，得到的是一个<strong>仿射函数</strong>：</p>
+  <p style="text-align:center;margin:16px 0">
+    <code style="font-size:14px;padding:8px 16px">EHP = HP × (1 + DEF / 602) = HP / (1 − m)</code>
+  </p>
+  <p>两条式子在<strong>恒等</strong>意义下相等——这不是拟合，是代数恒等。含义很干净：
+  <strong>每 1 点防御恒等于 +HP/602 点最大生命，与当前防御值无关</strong>。递减的是「每点防御换算成的免伤比例」，
+  不是「每点防御换算成的等效血量」。</p>
+
+  <figure>
+    <svg viewBox="0 0 720 300" role="img" aria-label="等效血量随防御值线性增长的直线图">
+      <g transform="translate(60,40)">
+        <line x1="0" y1="0" x2="0" y2="200" stroke="#2a3346" stroke-width="1"/>
+        <line x1="0" y1="200" x2="620" y2="200" stroke="#2a3346" stroke-width="1"/>
+        <g stroke="#1f2734" stroke-width="1">
+          <line x1="124" y1="0" x2="124" y2="200"/>
+          <line x1="248" y1="0" x2="248" y2="200"/>
+          <line x1="372" y1="0" x2="372" y2="200"/>
+          <line x1="496" y1="0" x2="496" y2="200"/>
+        </g>
+        <g stroke="#1f2734" stroke-width="1" stroke-dasharray="3 4">
+          <line x1="0" y1="50" x2="620" y2="50"/>
+          <line x1="0" y1="100" x2="620" y2="100"/>
+          <line x1="0" y1="150" x2="620" y2="150"/>
+        </g>
+        <polyline fill="none" stroke="#5fcf9a" stroke-width="2.4" stroke-linejoin="round"
+          points="0.0,194.4 6.2,192.6 12.4,190.8 18.6,188.9 24.8,187.1 31.0,185.2 37.2,183.4 43.4,181.5 49.6,179.7 55.8,177.8 62.0,176.0 68.2,174.1 74.4,172.3 80.6,170.5 86.8,168.6 93.0,166.8 99.2,164.9 105.4,163.1 111.6,161.2 117.8,159.4 124.0,157.5 130.2,155.7 136.4,153.8 142.6,152.0 148.8,150.1 155.0,148.3 161.2,146.5 167.4,144.6 173.6,142.8 179.8,140.9 186.0,139.1 192.2,137.2 198.4,135.4 204.6,133.5 210.8,131.7 217.0,129.8 223.2,128.0 229.4,126.2 235.6,124.3 241.8,122.5 248.0,120.6 254.2,118.8 260.4,116.9 266.6,115.1 272.8,113.2 279.0,111.4 285.2,109.5 291.4,107.7 297.6,105.9 303.8,104.0 310.0,102.2 316.2,100.3 322.4,98.5 328.6,96.6 334.8,94.8 341.0,92.9 347.2,91.1 353.4,89.2 359.6,87.4 365.8,85.5 372.0,83.7 378.2,81.9 384.4,80.0 390.6,78.2 396.8,76.3 403.0,74.5 409.2,72.6 415.4,70.8 421.6,68.9 427.8,67.1 434.0,65.2 440.2,63.4 446.4,61.6 452.6,59.7 458.8,57.9 465.0,56.0 471.2,54.2 477.4,52.3 483.6,50.5 489.8,48.6 496.0,46.8 502.2,44.9 508.4,43.1 514.6,41.3 520.8,39.4 527.0,37.6 533.2,35.7 539.4,33.9 545.6,32.0 551.8,30.2 558.0,28.3 564.2,26.5 570.4,24.6 576.6,22.8 582.8,20.9 589.0,19.1 595.2,17.3 601.4,15.4 607.6,13.6 613.8,11.7 620.0,9.9"/>
+        <circle cx="130.2" cy="155.7" r="4.2" fill="#d9b06a"/>
+        <text x="136" y="112" fill="#d9b06a" font-size="11.5" text-anchor="start">420 甲 → 16977</text>
+        <g fill="#77828f" font-size="11.5">
+          <text x="0" y="218" text-anchor="middle">0</text>
+          <text x="124" y="218" text-anchor="middle">400</text>
+          <text x="248" y="218" text-anchor="middle">800</text>
+          <text x="372" y="218" text-anchor="middle">1200</text>
+          <text x="496" y="218" text-anchor="middle">1600</text>
+          <text x="620" y="218" text-anchor="middle">2000</text>
+          <text x="620" y="238" text-anchor="end">防御值</text>
+        </g>
+        <g fill="#77828f" font-size="11.5" text-anchor="end">
+          <text x="-8" y="4">45k</text>
+          <text x="-8" y="104">27k</text>
+          <text x="-8" y="204">9k</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption><b>直线，不是曲线。</b>HP 固定为 10000 时，EHP 对防御值是一次函数 ——
+      斜率恒定 = HP/602。</figcaption>
+  </figure>
+
+  <h3>把「甲」翻译成「血」</h3>
+  <p>既然 1 点甲恒等于 <code>HP/602</code> 点生命，两种坦度属性就有了统一的兑换率。而这个兑换率
+  <strong>取决于血量</strong>——血越厚，甲越值钱。这是「堆甲还是堆血」不能用固定比例回答的根本原因。</p>
+
+  <table>
+    <thead><tr><th>当前血量</th><th class="num">1 点护甲 ≡</th><th class="num">+100 护甲 ≡</th><th class="num">+420 护甲 ≡</th></tr></thead>
+    <tbody>
+      <tr><td class="num">8 000</td><td class="num">13.29 生命</td><td class="num">1 329</td><td class="num">5 581</td></tr>
+      <tr><td class="num">10 000</td><td class="num">16.61 生命</td><td class="num">1 661</td><td class="num">6 977</td></tr>
+      <tr><td class="num">12 000</td><td class="num">19.93 生命</td><td class="num">1 993</td><td class="num">8 372</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <b>EHP 就是「能扛几下」。</b>10 000 血 0 甲能扛 <strong>20.00</strong> 次 500 点伤害；补一件 +420 甲的防装后是
+    <strong>33.95</strong> 次。同一笔预算换 2 000 血（霸者重装）只有 <strong>24.00</strong> 次 ——
+    这就是「反伤刺甲 420 甲 ≈ 6 977 血」在实战里的样子。
+    <br>但这条兑换率<strong>在真实伤害面前失效</strong>：真伤不吃护甲，此时血量项独撑，甲的价值归零。
+  </div>
+
+  <!-- ========================================================= 穿透 -->
+  <h2 id="pen">五、穿透：交点只由「固定值 ÷ 百分比」决定</h2>
+  <p>两种穿透都在削「有效护甲」，所以可以直接比较<strong>谁削掉得多</strong>，不必绕道伤害公式。
+  设护甲 <code>D</code>、固定穿透 <code>FIX</code>、百分比穿透 <code>PCT</code>：</p>
+
+  <dl class="kv">
+    <dt>固定削量</dt><dd><code>N_fix = D − FIX</code>（不小于 0）</dd>
+    <dt>比例削量</dt><dd><code>N_pct = (1 − PCT) × D</code></dd>
+    <dt>令二者相等</dt><dd><code>D − FIX = (1 − PCT)D</code> → <code>PCT × D = FIX</code> → <span class="warn">D* = FIX / PCT</span></dd>
+    <dt>代入数值</dt><dd><code>D* = 100 / 0.40 = 250</code>　—— 分界点在 250 甲</dd>
+  </dl>
+
+  <div class="note gold">
+    <b>这个结果里没有 602。</b>因为两条路径都要经过同一个单调映射 <code>m(N)</code>，
+    比较「谁的伤害更高」等价于比较「谁的有效护甲更低」，而这一步只涉及两个削量本身。
+    所以分界点与减伤常数<strong>无关</strong>——换任何一个 K，交点仍然是 <code>FIX/PCT</code>。
+    这也是一个可证伪的预言：如果哪天实测出交点随版本变动，那只能是 FIX 或 PCT 变了。
+  </div>
+
+  <figure>
+    <div class="legend">
+      <span><i style="background:#6fb4ff"></i>固定穿透 +100 的伤害增益</span>
+      <span><i style="background:#a78bfa"></i>百分比穿透 40% 的伤害增益</span>
+      <span><i style="background:#f07a72"></i>交点 250 甲</span>
+    </div>
+    <svg viewBox="0 0 720 300" role="img" aria-label="固定穿透与百分比穿透的伤害增益随护甲变化的交叉曲线">
+      <g transform="translate(60,40)">
+        <line x1="0" y1="0" x2="0" y2="200" stroke="#2a3346" stroke-width="1"/>
+        <line x1="0" y1="200" x2="620" y2="200" stroke="#2a3346" stroke-width="1"/>
+        <g stroke="#1f2734" stroke-width="1">
+          <line x1="124" y1="0" x2="124" y2="200"/>
+          <line x1="248" y1="0" x2="248" y2="200"/>
+          <line x1="372" y1="0" x2="372" y2="200"/>
+          <line x1="496" y1="0" x2="496" y2="200"/>
+        </g>
+        <g stroke="#1f2734" stroke-width="1" stroke-dasharray="3 4">
+          <line x1="0" y1="50" x2="620" y2="50"/>
+          <line x1="0" y1="100" x2="620" y2="100"/>
+          <line x1="0" y1="150" x2="620" y2="150"/>
+        </g>
+        <!-- 固定穿透 -->
+        <polyline fill="none" stroke="#6fb4ff" stroke-width="2.2" stroke-linejoin="round"
+          points="0.0,200.0 3.1,192.6 6.2,185.2 9.3,177.9 12.4,170.5 15.5,163.1 18.6,155.7 21.7,148.3 24.8,140.9 27.9,133.6 31.0,126.2 34.1,127.4 37.2,128.5 40.3,129.7 43.4,130.8 46.5,131.8 49.6,132.9 52.7,133.9 55.8,134.8 58.9,135.8 62.0,136.7 65.1,137.6 68.2,138.4 71.3,139.3 74.4,140.1 77.5,140.9 80.6,141.7 83.7,142.4 86.8,143.2 89.9,143.9 93.0,144.6 96.1,145.3 99.2,145.9 102.3,146.6 105.4,147.2 108.5,147.8 111.6,148.4 114.7,149.0 117.8,149.6 120.9,150.2 124.0,150.7 127.1,151.3 130.2,151.8 133.3,152.3 136.4,152.8 139.5,153.3 142.6,153.8 145.7,154.3 148.8,154.7 151.9,155.2 155.0,155.6 158.1,156.1 161.2,156.5 164.3,156.9 167.4,157.3 170.5,157.8 173.6,158.2 176.7,158.5 179.8,158.9 182.9,159.3 186.0,159.7 189.1,160.0 192.2,160.4 195.3,160.7 198.4,161.1 201.5,161.4 204.6,161.8 207.7,162.1 210.8,162.4 213.9,162.7 217.0,163.0 220.1,163.3 223.2,163.6 226.3,163.9 229.4,164.2 232.5,164.5 235.6,164.8 238.7,165.1 241.8,165.3 244.9,165.6 248.0,165.9 251.1,166.1 254.2,166.4 257.3,166.6 260.4,166.9 263.5,167.1 266.6,167.4 269.7,167.6 272.8,167.8 275.9,168.1 279.0,168.3 282.1,168.5 285.2,168.7 288.3,169.0 291.4,169.2 294.5,169.4 297.6,169.6 300.7,169.8 303.8,170.0 306.9,170.2 310.0,170.4 313.1,170.6 316.2,170.8 319.3,171.0 322.4,171.2 325.5,171.4 328.6,171.5 331.7,171.7 334.8,171.9 337.9,172.1 341.0,172.3 344.1,172.4 347.2,172.6 350.3,172.8 353.4,172.9 356.5,173.1 359.6,173.3 362.7,173.4 365.8,173.6 368.9,173.7 372.0,173.9 375.1,174.0 378.2,174.2 381.3,174.3 384.4,174.5 387.5,174.6 390.6,174.8 393.7,174.9 396.8,175.1 399.9,175.2 403.0,175.3 406.1,175.5 409.2,175.6 412.3,175.7 415.4,175.9 418.5,176.0 421.6,176.1 424.7,176.3 427.8,176.4 430.9,176.5 434.0,176.6 437.1,176.8 440.2,176.9 443.3,177.0 446.4,177.1 449.5,177.2 452.6,177.3 455.7,177.5 458.8,177.6 461.9,177.7 465.0,177.8 468.1,177.9 471.2,178.0 474.3,178.1 477.4,178.2 480.5,178.3 483.6,178.4 486.7,178.5 489.8,178.7 492.9,178.8 496.0,178.9 499.1,179.0 502.2,179.1 505.3,179.2 508.4,179.3 511.5,179.3 514.6,179.4 517.7,179.5 520.8,179.6 523.9,179.7 527.0,179.8 530.1,179.9 533.2,180.0 536.3,180.1 539.4,180.2 542.5,180.3 545.6,180.4 548.7,180.4 551.8,180.5 554.9,180.6 558.0,180.7 561.1,180.8 564.2,180.9 567.3,180.9 570.4,181.0 573.5,181.1 576.6,181.2 579.7,181.3 582.8,181.3 585.9,181.4 589.0,181.5 592.1,181.6 595.2,181.6 598.3,181.7 601.4,181.8 604.5,181.9 607.6,181.9 610.7,182.0 613.8,182.1 616.9,182.2 620.0,182.2"/>
+        <!-- 百分比穿透 -->
+        <polyline fill="none" stroke="#a78bfa" stroke-width="2.2" stroke-linejoin="round"
+          points="0.0,200.0 6.2,194.2 12.4,188.6 18.6,183.3 24.8,178.1 31.0,173.1 37.2,168.3 43.4,163.7 49.6,159.2 55.8,154.9 62.0,150.8 68.2,146.7 74.4,142.8 80.6,139.0 86.8,135.4 93.0,131.8 99.2,128.4 105.4,125.0 111.6,121.8 117.8,118.6 124.0,115.5 130.2,112.6 136.4,109.7 142.6,106.9 148.8,104.1 155.0,101.5 161.2,98.9 167.4,96.3 173.6,93.9 179.8,91.5 186.0,89.1 192.2,86.8 198.4,84.6 204.6,82.4 210.8,80.3 217.0,78.2 223.2,76.2 229.4,74.2 235.6,72.3 241.8,70.4 248.0,68.6 254.2,66.7 260.4,65.0 266.6,63.2 272.8,61.6 279.0,59.9 285.2,58.3 291.4,56.7 297.6,55.1 303.8,53.6 310.0,52.1 316.2,50.6 322.4,49.2 328.6,47.8 334.8,46.4 341.0,45.0 347.2,43.7 353.4,42.4 359.6,41.1 365.8,39.9 372.0,38.6 378.2,37.4 384.4,36.2 390.6,35.1 396.8,33.9 403.0,32.8 409.2,31.7 415.4,30.6 421.6,29.5 427.8,28.4 434.0,27.4 440.2,26.4 446.4,25.4 452.6,24.4 458.8,23.4 465.0,22.5 471.2,21.5 477.4,20.6 483.6,19.7 489.8,18.8 496.0,17.9 502.2,17.0 508.4,16.2 514.6,15.3 520.8,14.5 527.0,13.7 533.2,12.9 539.4,12.1 545.6,11.3 551.8,10.5 558.0,9.8 564.2,9.0 570.4,8.3 576.6,7.5 582.8,6.8 589.0,6.1 595.2,5.4 601.4,4.7 607.6,4.0 613.8,3.4 620.0,2.7"/>
+        <!-- 交点 -->
+        <line x1="77.5" y1="0" x2="77.5" y2="200" stroke="#f07a72" stroke-width="1.4" stroke-dasharray="4 4"/>
+        <circle cx="77.5" cy="140.9" r="4.4" fill="#f07a72"/>
+        <text x="84" y="22" fill="#f07a72" font-size="11.8">交点 250 甲 · 13.30%</text>
+        <text x="20" y="96" fill="#a78bfa" font-size="11.8">40% 穿透</text>
+        <text x="150" y="176" fill="#6fb4ff" font-size="11.8">固定 +100</text>
+        <g fill="#77828f" font-size="11.5">
+          <text x="0" y="218" text-anchor="middle">0</text>
+          <text x="124" y="218" text-anchor="middle">400</text>
+          <text x="248" y="218" text-anchor="middle">800</text>
+          <text x="372" y="218" text-anchor="middle">1200</text>
+          <text x="496" y="218" text-anchor="middle">1600</text>
+          <text x="620" y="218" text-anchor="middle">2000</text>
+          <text x="620" y="238" text-anchor="end">目标护甲</text>
+        </g>
+        <g fill="#77828f" font-size="11.5" text-anchor="end">
+          <text x="-8" y="4">45%</text>
+          <text x="-8" y="54">34%</text>
+          <text x="-8" y="104">22%</text>
+          <text x="-8" y="154">11%</text>
+          <text x="-8" y="204">0</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption><b>一条凸、一条先升后降。</b>固定穿透在 100 甲处见顶（16.61%），之后单调退坡；
+      百分比穿透单调上升，上界是 66.67%（甲→∞）。</figcaption>
+  </figure>
+
+  <table>
+    <thead><tr><th>目标护甲</th><th class="num">固定 +100 增益</th><th class="num">40% 穿透增益</th><th>谁更优</th></tr></thead>
+    <tbody>
+      <tr><td class="num">0</td><td class="num">0.00%</td><td class="num">0.00%</td><td>两者都无效 —— 没有护甲可削</td></tr>
+      <tr><td class="num">100</td><td class="num"><span class="ok">16.61%</span></td><td class="num">6.04%</td><td>固定穿透的最优点</td></tr>
+      <tr><td class="num">250</td><td class="num">13.30%</td><td class="num">13.30%</td><td class="warn">分界点，两值相等</td></tr>
+      <tr><td class="num">600</td><td class="num">9.07%</td><td class="num"><span class="ok">24.95%</span></td><td>百分比已领先 2.7 倍</td></tr>
+      <tr><td class="num">1400</td><td class="num">5.26%</td><td class="num"><span class="ok">38.84%</span></td><td>百分比领先 7.4 倍</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note red">
+    <b>「固定穿透打脆皮」要说得更准。</b>固定穿透的增益不是「越低甲越好」，而是
+    <strong>在「恰好把护甲清零」那一点见顶</strong>——因为有效护甲不允许为负，超过 FIX 的部分是白给。
+    对 0 甲目标，百穿的增益<strong>正好是 0</strong>。所以准确的表述是：<br>
+    百穿的价值区间是 <strong>0 甲 &lt; D ≤ 250 甲</strong>，峰值在 D = 100；它不是「打脆皮」，是
+    <strong>打「有甲但不厚」的目标</strong>——这也解释了为什么它对无甲单位毫无用处、对半肉战士却极其划算。
+  </div>
+
+  <p>两个上界值得单独记：物理百分比穿透上限 40%，对应增益上界 <strong>66.67%</strong>；法术上限 45%，
+  对应 <strong>81.82%</strong>。<strong>法穿上界比物穿高 5pp，增益上界高 15.15pp</strong>——这是法师后期能处理
+  高魔抗前排的数值依据，也是「法术穿透装更晚成型但更强」的数学来源。</p>
+
+  <!-- ========================================================= 攻速 -->
+  <h2 id="as">六、攻速：不是连续属性，是 11 个帧数格子</h2>
+  <p>攻速面板上的百分比只在<strong>跨过档位阈值</strong>时才有意义，落在区间内完全无效。
+  反解依据是一条几乎不需要拟合的式子：</p>
+  <p style="text-align:center;margin:14px 0">
+    <code style="font-size:14px;padding:7px 15px">T = F × 0.066</code>
+    <span style="font-size:12.6px;color:var(--dim)">　攻击间隔（秒）= 帧数 × 每帧秒数</span>
+  </p>
+  <p>18 帧 × 0.066 = 1.188 秒，8 帧 × 0.066 = 0.528 秒。模型里 11 档 × 3 套英雄模型共 <strong>33 个格子
+  全部精确成立</strong>——这说明它不是拟合出来的近似式，而是引擎的真实帧数换算。</p>
+
+  <div class="ladder">
+    <div class="head"><span>帧数</span><span>每秒攻击次数（相对）</span><span>攻击间隔</span><span>每秒次数</span></div>
+    <div class="row"><span class="f">18</span><div class="bar"><i style="width:44.4%"></i></div><span class="t">1.188 s</span><span class="d">0.842</span></div>
+    <div class="row"><span class="f">17</span><div class="bar"><i style="width:47.1%"></i></div><span class="t">1.122 s</span><span class="d">0.891</span></div>
+    <div class="row"><span class="f">16</span><div class="bar"><i style="width:50.0%"></i></div><span class="t">1.056 s</span><span class="d">0.947</span></div>
+    <div class="row"><span class="f">15</span><div class="bar"><i style="width:53.3%"></i></div><span class="t">0.990 s</span><span class="d">1.010</span></div>
+    <div class="row"><span class="f">14</span><div class="bar"><i style="width:57.1%"></i></div><span class="t">0.924 s</span><span class="d">1.082</span></div>
+    <div class="row"><span class="f">13</span><div class="bar"><i style="width:61.5%"></i></div><span class="t">0.858 s</span><span class="d">1.166</span></div>
+    <div class="row"><span class="f">12</span><div class="bar"><i style="width:66.7%"></i></div><span class="t">0.792 s</span><span class="d">1.263</span></div>
+    <div class="row"><span class="f">11</span><div class="bar"><i style="width:72.7%"></i></div><span class="t">0.726 s</span><span class="d">1.377</span></div>
+    <div class="row"><span class="f">10</span><div class="bar"><i style="width:80.0%"></i></div><span class="t">0.660 s</span><span class="d">1.515</span></div>
+    <div class="row"><span class="f">9</span><div class="bar"><i style="width:88.9%"></i></div><span class="t">0.594 s</span><span class="d">1.684</span></div>
+    <div class="row top"><span class="f">8</span><div class="bar"><i style="width:100%"></i></div><span class="t">0.528 s</span><span class="d">1.894</span></div>
+  </div>
+
+  <div class="note">
+    <b>「卡档」的全部内容。</b>从 116% 档升到 152% 档，需要额外投入 <strong>31.03%</strong> 的攻速
+    （<code>1.52/1.16 − 1</code>）。如果这笔投入差一点点没跨过去，这 31% 的边际收益<strong>是 0</strong>。
+    <br>另一件容易看错的事：最高档相对最低档的每秒攻击次数是 <strong>2.25 倍</strong>（18/8），
+    而面板攻速从 0% 走到 152%。<strong>面板百分比与帧数是两把尺</strong>，不能拿 1.52 直接当「快 1.52 倍」。
+  </div>
+
+  <!-- ========================================================= 移速 -->
+  <h2 id="ms">七、移速：三段折线，超过 560 就在浪费属性</h2>
+  <dl class="kv">
+    <dt>分段式</dt>
+    <dd><code>MS ≤ 500 → MS</code>　；　<code>500 &lt; MS ≤ 560 → 500 + (MS−500)×0.8</code>　；　
+        <code>MS &gt; 560 → 548 + (MS−560)×0.5</code></dd>
+    <dt>下限 / 上限</dt><dd>125 / 800</dd>
+  </dl>
+
+  <table>
+    <thead><tr><th>面板移速</th><th class="num">生效值</th><th class="num">属性利用率</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td class="num">418（380+38）</td><td class="num">418.0</td><td class="num">100.0%</td><td>截图实证：基础 380 + 装备铭文 38，全额生效</td></tr>
+      <tr><td class="num">500</td><td class="num">500.0</td><td class="num">100.0%</td><td>第一阈值，整数关</td></tr>
+      <tr><td class="num">560</td><td class="num">548.0</td><td class="num">97.9%</td><td>第二阈值，此处出现折点</td></tr>
+      <tr><td class="num">600</td><td class="num">568.0</td><td class="num">94.7%</td><td>500 + 48 + 20</td></tr>
+      <tr><td class="num">800</td><td class="num">668.0</td><td class="num">83.5%</td><td>上限档：堆满也只拿到 83.5%</td></tr>
+    </tbody>
+  </table>
+
+  <p>三段的系数 <strong>1.0 / 0.8 / 0.5</strong> 说明设计意图很清楚：<strong>鞋子的价值被集中在 500 以下那一段</strong>。
+  超过 560 之后，每 2 点面板移速才换 1 点实际移速 —— 追杀与逃生该优先考虑位移技能，而不是继续堆移速。</p>
+
+  <!-- ========================================================= 上限清单 -->
+  <h2 id="cap">八、十一个上限：每一个都是一个「出装停止点」</h2>
+  <p>这些上限不是防作弊，而是<strong>性价比曲线的拐点</strong>。跨过上限之后，那部分属性对战斗结算的贡献严格为 0。</p>
+
+  <table>
+    <thead><tr><th>属性</th><th class="num">上限</th><th>越过之后</th></tr></thead>
+    <tbody>
+      <tr><td>攻击速度</td><td class="num">200%</td><td>落在最高档（8 帧）后不再提速，剩下的攻速是白属性</td></tr>
+      <tr><td>移动速度</td><td class="num">800 / 下限 125</td><td>800 时实际只有 668，利用率 83.5%</td></tr>
+      <tr><td>暴击率</td><td class="num">100%</td><td>超过无意义</td></tr>
+      <tr><td>暴击效果</td><td class="num">250%</td><td>2.0 → 2.5 是 +25% 伤害，凑满要占 1/3 铭文槽</td></tr>
+      <tr><td>冷却缩减</td><td class="num">40%</td><td>六件圣杯也破不了 40%，装备选择应止步于封顶</td></tr>
+      <tr><td>物理吸血</td><td class="num">100%</td><td>—</td></tr>
+      <tr><td>法术吸血</td><td class="num">100%</td><td>—</td></tr>
+      <tr><td>韧性</td><td class="num">60%</td><td>对压制 / 牵引 / 定身无效</td></tr>
+      <tr><td>伤害减免</td><td class="num">90%</td><td>防爆线；蒙恬等极少数可到 100%</td></tr>
+      <tr><td>物理百分比穿透</td><td class="num">40%</td><td>增益上界 66.67%</td></tr>
+      <tr><td>法术百分比穿透</td><td class="num">45%</td><td>增益上界 81.82%</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note gold">
+    <b>免伤 90% 这条线的必要性。</b><code>m = N/(N+602)</code> 天然到不了 100%，但英雄技能与装备的
+    <code>DR</code> 是独立乘区。<strong>两个乘区各自接近 1，乘起来就接近「无敌」</strong>——
+    90% 的封顶正是为了防止这两个乘区叠加后穿透到 100%。
+  </div>
+
+  <!-- ========================================================= 计算器 -->
+  <h2 id="calc">九、把这套式子拿去算一次</h2>
+  <p>下面这个实算器跑的就是本页的四段链路。改任一输入，四个数值与下方那句判断都会同步重算——包括
+  <strong>「当前护甲下该带哪种穿透」</strong>这个判断。</p>
+
+  <div class="calc">
+    <div class="grid">
+      <div class="field"><label>原始伤害 s</label><input id="i-s" type="number" value="1000" min="0" step="50"></div>
+      <div class="field"><label>目标护甲 DEF</label><input id="i-def" type="number" value="600" min="0" step="10"></div>
+      <div class="field"><label>固定穿透 FIX</label><input id="i-fix" type="number" value="100" min="0" step="10"></div>
+      <div class="field"><label>百分比穿透 PCT（%）</label><input id="i-pct" type="number" value="40" min="0" max="45" step="5"></div>
+      <div class="field"><label>英雄/装备免伤 DR（%）</label><input id="i-dr" type="number" value="30" min="0" max="100" step="5"></div>
+      <div class="field"><label>格挡 BLK</label><input id="i-blk" type="number" value="0" min="0" step="20"></div>
+    </div>
+    <div class="out">
+      <div><b id="o-n" class="b">300</b><span>有效护甲 N</span></div>
+      <div><b id="o-m">33.26%</b><span>护甲减免 m</span></div>
+      <div><b id="o-d" class="g">467.18</b><span>最终伤害</span></div>
+      <div><b id="o-g" class="g">+6.7%</b><span>相对无穿透</span></div>
+    </div>
+    <div class="verdict" id="o-v"></div>
+  </div>
+
+  <div class="note">
+    <b>另一个常用换算：这个血量下，1 点护甲值多少血？</b>
+    输入血量，得到兑换率 —— 用来比较「+420 甲的防装」和「+2000 血的防装」谁更划算。
+    <div style="margin-top:10px">
+      <label style="font-size:12px;color:var(--dim);margin-right:8px">最大生命</label>
+      <input id="i-hp" type="number" value="10000" min="0" step="500"
+        style="width:130px;background:#101620;border:1px solid var(--line2);border-radius:6px;
+        color:var(--fg);font-size:14px;padding:6px 10px;font-variant-numeric:tabular-nums;font-family:inherit">
+      <span id="o-hp" style="margin-left:14px;font-size:13.4px;color:#c9d2df"></span>
+    </div>
+  </div>
+
+  <!-- ========================================================= 验证 -->
+  <h2 id="verify">十、验证：24 条样本里 23 条命中，唯一失配的背后更值得看</h2>
+  <p>模型样本区提供 24 条带「期望值」的官方样本。本页<strong>不用它自带的实算列</strong>，
+  而是用参数区独立重算每一条：<strong>23 条命中</strong>，唯一失配是 <code>719/1321 = 0.544284</code>
+  四舍五入到四位应为 <code>0.5443</code>，而模型手填的是 <code>0.5442</code>（截断而非四舍五入），Δ = 0.0001。</p>
+
+  <table>
+    <thead><tr><th>样本</th><th class="num">独立重算</th><th class="num">模型手填</th><th>判定</th></tr></thead>
+    <tbody>
+      <tr><td>亚瑟物防 900</td><td class="num">0.5992</td><td class="num">0.5992</td><td class="ok">命中</td></tr>
+      <tr><td>亚瑟法防 719</td><td class="num">0.5443</td><td class="num">0.5442</td><td class="bad">失配</td></tr>
+      <tr><td>每 100 甲增幅 / 10000 血 0 甲 / +420 甲</td><td class="num">0.1661 / 10000 / 16977</td><td class="num">同左</td><td class="ok">全中</td></tr>
+      <tr><td>1000 伤打 100 甲（无穿 / 百穿）</td><td class="num">858 / 1000</td><td class="num">同左</td><td class="ok">全中</td></tr>
+      <tr><td>900 甲经双穿透</td><td class="num">480</td><td class="num">480</td><td class="ok">命中</td></tr>
+      <tr><td>暴击 300 攻（基础 / 封顶）</td><td class="num">600 / 750</td><td class="num">同左</td><td class="ok">全中</td></tr>
+      <tr><td>攻速 18 帧 / 8 帧 / 跨档成本</td><td class="num">1.188 / 0.528 / 0.3103</td><td class="num">同左</td><td class="ok">全中</td></tr>
+      <tr><td>移速 600 / 满 CDR 63 秒</td><td class="num">568 / 37.8</td><td class="num">同左</td><td class="ok">全中</td></tr>
+    </tbody>
+  </table>
+
+  <h2>标签</h2>
+  <div class="pills">
+    <span class="pill">凹函数减伤 <i>·</i> N/(N+602)</span>
+    <span class="pill">EHP 线性</span>
+    <span class="pill">穿透分界 250</span>
+    <span class="pill">离散攻速 11 档</span>
+    <span class="pill">移速三段</span>
+    <span class="pill">11 项硬上限</span>
+    <span class="pill">58 条复核点</span>
+  </div>
+
+  <footer>
+    <p>《王者荣耀》战斗数值专题 ｜ 代号 WZRY ｜ 更新时点 2026-11 ｜ 版本 12.1.1.1 / S45「月照长安」</p>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  var K = 602, TAKEN = function (n) { return K / (n + K); };
+
+  function num(id, dflt) {
+    var v = parseFloat(document.getElementById(id).value);
+    return isFinite(v) ? v : dflt;
+  }
+
+  function recalc() {
+    var s = num('i-s', 1000),
+        def = Math.max(num('i-def', 600), 0),
+        fix = Math.max(num('i-fix', 0), 0),
+        pct = Math.min(Math.max(num('i-pct', 0), 0), 100) / 100,
+        dr = Math.min(Math.max(num('i-dr', 0), 0), 100) / 100,
+        blk = Math.max(num('i-blk', 0), 0);
+
+    var n = Math.max((def - fix) * (1 - pct), 0);
+    var m = n / (n + K);
+    var dmg = s * TAKEN(n) * (1 - dr) - blk;
+    if (dmg < 0) { dmg = 0; }
+
+    var base = s * TAKEN(def) * (1 - dr) - blk;
+    if (base < 0) { base = 0; }
+    var gain = base > 0 ? (dmg / base - 1) * 100 : 0;
+
+    document.getElementById('o-n').textContent = Math.round(n);
+    document.getElementById('o-m').textContent = (m * 100).toFixed(2) + '%';
+    document.getElementById('o-d').textContent = dmg.toFixed(2);
+    document.getElementById('o-g').textContent = (gain >= 0 ? '+' : '') + gain.toFixed(1) + '%';
+
+    // 穿透判断
+    var star = pct > 0 ? fix / pct : Infinity;
+    var adv;
+    if (def <= 0) {
+      adv = '目标护甲为 0，任何穿透都不产生收益 —— 护甲项本来就是 <em>0</em>。';
+    } else if (pct <= 0 && fix <= 0) {
+      adv = '两种穿透都是 0，当前没有任何穿透收益。';
+    } else if (pct <= 0) {
+      adv = '未带百分比穿透，固定穿透是唯一来源（' + Math.round(fix) + ' 点）。';
+    } else if (fix <= 0) {
+      adv = '未带固定穿透，分界点为 <em>0</em>，百分比穿透在任何护甲上都优于不带。';
+    } else if (def < star) {
+      adv = '若只能带一种：目标护甲 ' + Math.round(def) + ' 低于分界点 <em>' + Math.round(star) +
+            '</em>，<em>固定穿透</em>削得更多（' + Math.round(fix) + ' 点 &gt; ' +
+            (def * pct).toFixed(0) + ' 点）。';
+    } else if (def > star) {
+      adv = '若只能带一种：目标护甲 ' + Math.round(def) + ' 高于分界点 <em>' + Math.round(star) +
+            '</em>，<em>百分比穿透</em>削得更多（' + (def * pct).toFixed(0) + ' 点 &gt; ' +
+            Math.round(fix) + ' 点）。';
+    } else {
+      adv = '目标护甲正好落在分界点 <em>' + Math.round(star) +
+            '</em>，若只带一种，两者削掉的护甲完全相同。';
+    }
+    if (def > 0 && def < fix && fix > 0) {
+      adv += ' 注意：固定穿透已超过目标护甲，超出部分被截断，属白给。';
+    }
+    document.getElementById('o-v').innerHTML = adv;
+  }
+
+  function recalcHP() {
+    var hp = Math.max(num('i-hp', 10000), 0);
+    var per = hp / K;
+    document.getElementById('o-hp').innerHTML =
+      '1 点护甲 ≡ <strong>' + per.toFixed(2) + '</strong> 点生命　｜　' +
+      '+100 甲 ≡ <strong>' + Math.round(per * 100) + '</strong>　｜　' +
+      '+420 甲 ≡ <strong>' + Math.round(per * 420) + '</strong>';
+  }
+
+  var ids = ['i-s', 'i-def', 'i-fix', 'i-pct', 'i-dr', 'i-blk'];
+  for (var i = 0; i < ids.length; i++) {
+    document.getElementById(ids[i]).addEventListener('input', recalc);
+  }
+  document.getElementById('i-hp').addEventListener('input', recalcHP);
+
+  recalc();
+  recalcHP();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>游戏数值调研作品集</title>
+<style>
+  :root{
+    --bg:#0e131a; --panel:#161d27; --panel2:#1d2632; --line:#2a3543;
+    --text:#e6edf3; --muted:#93a1b1; --accent:#4f9dff; --accent2:#ffb454;
+    --chip:#243042; --chip-on:#2d4a73;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",system-ui,sans-serif;
+    font-size:14px; line-height:1.6; display:flex; flex-direction:column;
+    height:100vh; height:100dvh; -webkit-text-size-adjust:100%;
+  }
+  header{
+    padding:14px 20px; border-bottom:1px solid var(--line);
+    background:linear-gradient(90deg,#121a24,#0e131a); display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+  }
+  header h1{font-size:18px; margin:0; letter-spacing:.5px}
+  header .sub{color:var(--muted); font-size:12.5px}
+  header .note{color:var(--muted); font-size:12px; margin-left:auto; max-width:44%; line-height:1.5}
+  .body{flex:1; display:flex; min-height:0}
+  /* ---------- 左侧 ---------- */
+  /* 框体随视口收窄：340px 上限 → 160px 下限；内部留白同步收缩，给右侧腾出内容宽度 */
+  .side{width:clamp(160px, 23.6vw, 340px); min-width:0; border-right:1px solid var(--line); background:var(--panel);
+        display:flex; flex-direction:column; min-height:0}
+  .side .tools{padding:clamp(8px, .85vw, 12px); border-bottom:1px solid var(--line); display:flex; flex-direction:column; gap:10px}
+  .search{width:100%; padding:9px 11px; border-radius:8px; border:1px solid var(--line);
+          background:var(--panel2); color:var(--text); font-size:14px; outline:none}
+  .search:focus{border-color:var(--accent)}
+  .filters{display:flex; gap:10px; align-items:center}
+  .sort{display:flex; align-items:center; gap:6px; color:var(--muted); font-size:12px; flex:1; min-width:0}
+  .sort span{flex:0 0 auto}
+  .sort select{flex:1; min-width:0; background:var(--panel2); color:var(--text); border:1px solid var(--line);
+        border-radius:6px; padding:5px 7px; font-size:12px; outline:none}
+  .sort select:focus{border-color:var(--accent)}
+  .list{flex:1; overflow:auto; padding:clamp(5px, .6vw, 8px); -webkit-overflow-scrolling:touch}
+  .item{padding:10px clamp(8px, .85vw, 12px); border-radius:8px; cursor:pointer; border:1px solid transparent;
+        margin-bottom:4px; min-width:0}
+  .item:hover{background:var(--panel2)}
+  .item.on{background:var(--chip-on); border-color:var(--accent)}
+  .item .t{font-size:14px; font-weight:600; line-height:1.45; overflow-wrap:anywhere; word-break:break-word}
+  .item .m{display:flex; gap:8px; align-items:center; margin-top:4px; flex-wrap:wrap}
+  .badge{font-size:11px; padding:1px 7px; border-radius:5px; background:var(--chip); color:var(--muted)}
+  .badge.cat{background:#243a2e; color:#8fe0b0}
+  .badge.focus{background:#3a3324; color:#f0cf8e}
+  .badge.date{background:#25364a; color:#bcd8ff}
+  .empty{color:var(--muted); text-align:center; padding:30px 10px; font-size:13px}
+  /* ---------- 右侧 ---------- */
+  .main{flex:1; overflow:auto; padding:26px 32px 40px; min-height:0; -webkit-overflow-scrolling:touch}
+  .wrap{max-width:940px; margin:0 auto}
+  .detail h2{margin:0 0 6px; font-size:24px; line-height:1.3}
+  .hd-meta{display:flex; gap:8px; align-items:center; margin-bottom:22px; flex-wrap:wrap}
+  .sec{margin:0 0 10px; font-size:13px; color:var(--accent2); font-weight:700; letter-spacing:.5px;
+       border-left:3px solid var(--accent2); padding-left:9px}
+  /* 引导句 */
+  .lead{background:linear-gradient(90deg,#1b2634,#161d27); border:1px solid var(--line);
+        border-left:3px solid var(--accent); border-radius:0 10px 10px 0;
+        padding:13px 16px; font-size:14.5px; line-height:1.72; color:#dce6f0; margin-bottom:14px}
+  /* 定义列表：左标签胶囊 / 右内容 */
+  dl.ov{margin:0; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--panel)}
+  .ov-row{display:flex; gap:14px; padding:12px 16px; border-bottom:1px solid #232e3a}
+  .ov-row:last-child{border-bottom:none}
+  .ov-row dt{flex:0 0 104px; margin:0; padding:0}
+  .ov-row dt span{display:inline-block; background:var(--chip-on); color:#cfe2ff;
+        font-size:12px; font-weight:600; padding:2px 9px; border-radius:6px; line-height:1.7}
+  .ov-row dd{margin:0; flex:1; min-width:0; line-height:1.68; color:#d7e0e9; font-size:13.6px}
+  .foot{color:var(--muted); font-size:11.5px; line-height:1.7; margin-top:24px;
+        border-top:1px solid var(--line); padding-top:12px}
+  .foot span{color:#f0cf8e}
+  .placeholder{color:var(--muted); text-align:center; margin-top:80px}
+  code{font-family:ui-monospace,Consolas,"Courier New",monospace; background:#1d2632;
+       padding:1px 5px; border-radius:4px; font-size:.92em; color:#cfe2ff}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:#2c3848; border-radius:6px}
+  ::-webkit-scrollbar-track{background:transparent}
+
+  /* ---------- 窄窗口：分类／排序改为上下换行，让左栏可继续收窄 ---------- */
+  /* 阈值 1200px：此时左栏约 283px，横排两个下拉各约 98px，再窄选项文字就会被原生截断 */
+  @media (max-width:1200px){
+    .filters{flex-direction:column; align-items:stretch; gap:6px}
+    .sort{width:100%}
+    .sort select{padding:5px 6px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>游戏数值调研作品集</h1>
+  <span class="sub" id="count"></span>
+  <span class="note">逐份提炼全部调研资料的内容要点；数值与判断均转述自原报告，以原件为准。</span>
+</header>
+<div class="body">
+  <aside class="side" id="side">
+    <div class="tools">
+      <input class="search" id="search" placeholder="搜索游戏名…" autocomplete="off">
+      <div class="filters">
+        <div class="sort"><span>分类</span><select id="cat"></select></div>
+        <div class="sort"><span>排序</span><select id="sort">
+          <option value="default">默认顺序</option>
+          <option value="name">名称 A→Z</option>
+          <option value="size">文件大小 大→小</option>
+          <option value="chars">字符数 多→少</option>
+          <option value="date">资料时间 新→旧</option>
+        </select></div>
+      </div>
+    </div>
+    <div class="list" id="list"></div>
+  </aside>
+  <main class="main" id="main">
+    <div class="wrap" id="wrap"></div>
+  </main>
+</div>
+<script>
+const DATA = [{"raw": "【调研】三国志·战略版深度研究报告.docx", "title": "三国志·战略版", "slug": "调研三国志·战略版深度研究报告docx", "category": "深度研究", "file": "【调研】三国志·战略版深度研究报告.docx", "size_bytes": 198686, "size_human": "194.0 KB", "ext": "docx", "mdate": "2022-03", "chars": 6140, "cjk": 5258, "images": 4, "headings": ["三国志·战略版深度研究报告", "游戏概述", "1.1.产品信息", "1.2摘要", "第一部分 宏观分析", "2.1 产品战略", "后续内容："], "paras": 126, "ov": {"focus": "产品战略 · 深度研究", "tagline": "SLG 品类里「率土-like」首个成功复刻者的产品战略复盘，追踪近两年并做了深度付费体验。", "points": [["立项逻辑", "简悦与阿里游戏在卡牌、渠道、发行三战皆败后，SLG 成为唯一出路；选率土-like 而非 COK-like，是因为其长线留存模型已被市场验证。"], ["反设计的极简", "系统少而精，研发团队仅 30 人、周期约一年；资源只压在两处——战斗系统保长留存、抽卡保商业化，其余一律精简。"], ["商业模型铁三角", "长线留存（武将自由配技能／赛季重置／强协作）＋商业化（高 ARPPU、限时卡包、抽卡不保底）＋用户量（光荣 IP、代言、买量上渠道、全平台数据互通），三者各由不同部门负责。"], ["针对性取舍", "把率土行军 45 秒／格压到 15 秒、加占地 5 分钟冷却，内置尚书台降上手门槛，攻城一键化，用节奏与美术换吸量。"], ["数据", "2020 年上半年总流水 37 亿、月均过 6 亿（报告载述，源于上市公司公告披露）。"]]}}, {"raw": "【调研】命运-冠位指定调研报告.docx", "title": "命运-冠位指定", "slug": "调研命运冠位指定调研报告docx", "category": "调研报告", "file": "【调研】命运-冠位指定调研报告.docx", "size_bytes": 27158653, "size_human": "25.9 MB", "ext": "docx", "mdate": "2022-03", "chars": 9538, "cjk": 7098, "images": 78, "headings": ["命运-冠位指定", "游戏概述", "1.1排行榜情况（国服iOS）", "1.2全球营收", "1.3体验账号", "战斗系统", "2.1战斗界面", "2.2战斗相关元素", "2.3战斗流程", "2.4攻击模组与宝具动画", "2.5从者强度", "2.6阵容搭配", "核心玩法", "3.1每日登录签到", "3.2日常资源关卡", "3.3日常任务", "3.4剧情关卡", "3.5活动关卡", "3.6从者幕间、强化副本"], "paras": 377, "ov": {"focus": "战斗公式 · 全量拆解", "tagline": "以「战前编队＋指令卡」为核心的回合制卡牌；本份最大价值是把伤害、出星、宝具值三条公式逐项拆开。", "points": [["指令卡决策", "红／蓝／绿／白／宝具五色，卡池每回合随机发 5 选 3；首位染色（红 +50% 伤害、蓝 +100% 宝具值、绿 +20% 出星）与同色／同从者连携构成主要决策。"], ["伤害公式", "ATK×0.23×卡牌倍率×职阶补正×克制×阵营×暴击×乱数（0.9–1.1）连乘（报告载述）；出星、NP 获取各有独立公式，Overkill 乘算补正已成常数残留。"], ["阵容经济学", "多层 BUFF 不被稀释，最优解是「1 打手＋多名拐（辅助）」；人权卡是少数五星辅助，星级只表示稀有度、不代表强度，低星也能通关。"], ["长线设计", "主线剧情超 200 万字、按视觉小说呈现；幕间与强化副本只强化不削弱，用于回捞退环境从者，同时兼顾强度党与真爱党。"], ["运营案例", "无限池活动体力性价比约为日常的 10 倍（报告载述），是新手追赶的主通道；国服 2021 年因皮肤与强化副本延期引发玩家「止氪计划」。"]]}}, {"raw": "明日方舟（文档与脑图合并）", "title": "明日方舟", "slug": "调研明日方舟研究报告docx", "category": "调研报告", "file": "【调研】明日方舟 研究报告.docx", "size_bytes": 3135971, "size_human": "3.0 MB", "ext": "docx", "mdate": "2022-07", "chars": 3559, "cjk": 2922, "images": 23, "headings": ["明日方舟", "一、游戏概述", "1.1.  产品信息", "1.2.  排行榜情况", "二、战斗系统", "2.1.    输赢判定", "2.2.    干员攻击方向", "2.3.    干员分类", "2.4.    怪物（飞行和陆地）", "2.5.    干员的部署", "2.6.    干员技能释放原理", "三、游戏玩法", "3.1.    主线副本", "3.2.    物资副本", "3.3.    芯片副本", "3.4.    剿灭作战", "市场营销", "产品特点", "营销策略", "后续内容："], "paras": 156, "ov": {"focus": "战斗机制 · 发行复盘 · 营销时间线", "tagline": "把塔防改造成「干员朝向＋部署费用」的即时策略，叠加分层拉新打法；同一份研究还留有 199 节点的系统拆解树与逐条带日期的营销时间线。", "points": [["胜负判定", "不是全灭，而是「漏怪数 ≥ 关卡阈值」判负；干员放置时定朝向、朝向决定攻击范围且不可更改，区别于传统辐射范围塔防。"], ["资源节奏", "部署费用初始 10、随时间回复，先锋干员技能额外产费；再部署约 60 秒，实战中阵亡基本来不及补位。"], ["体力与产出", "首败全额返还、第二次扣 1、逐次递增至只返一半（报告载述）；剿灭作战 400 怪按击杀数给合成玉，周上限初始 1200（约 2 抽）。"], ["产品判断", "前期硬核策略＋后期偏养成的养老玩法，在「废萌」与「硬核」之间取平衡；报告明确指出其硬核是一次性的，后期靠养成承接留存。"], ["发行路径", "踩在版号重启后的产品荒窗口，用概念 PV 长线悬念、漫展与周边前置积累核心用户，公测后靠同人／MMD 征集扩到泛二次元。"], ["系统树", "另有 199 节点的拆解框架，按游戏概述／战斗系统／玩法系统／市场营销／其他五枝展开；干员分类（近战 4 类、远程 2 类、奶 2 类）、可阻挡数、技能能量「自动／攻击恢复」×「自动／手动释放」四象限、物资 5 类与芯片 4 类副本周轮换表均可枚举。"], ["营销时间线", "2017 概念 PV → 2018 起多场漫展与周边 → 2019 公测主播／同人征集 → 稳定期异业合作与公益，逐条带日期，颗粒度细于正文论述。"]]}, "merged": true}, {"raw": "【调研分享】《光·遇》调研报告.docx", "title": "光·遇", "slug": "调研分享光·遇调研报告docx", "category": "调研分享", "file": "【调研分享】《光·遇》调研报告.docx", "size_bytes": 11041120, "size_human": "10.5 MB", "ext": "docx", "mdate": "2022-03", "chars": 8360, "cjk": 7170, "images": 48, "headings": ["《光·遇》", "游戏概述", "1.1产品信息", "1.2体验帐号说明", "1.3游戏诞生背景", "核心玩法", "2.1光", "2.2遇", "2.3道具装扮", "2.4新手引导", "后续内容"], "paras": 193, "ov": {"focus": "社交系统 · 货币闭环", "tagline": "无数值、无等级、无 PVP 的「表现驱动」社交冒险，把人际关系本身做成了核心系统。", "points": [["光与遇", "「光」是探索收集——99 个小金人撑起光翼等级与飞行能量；「遇」是社交。能量不自动回复，只能靠近光源或由他人长按发光充能，从机制上逼出互助。"], ["货币闭环", "蜡烛兑换先祖表情树；爱心只能由 3 蜡烛换 1 或好友每日互赠，且先祖处合计上限仅 37 颗（报告载述），从而把高级道具与社交强绑定。"], ["献祭循环", "暴风眼／伊甸用 4 个光之翼换 1 根升华蜡烛、周上限 15 根；转生后小金人刷新，形成「收集—献祭—重收」主线，永久光之翼每 2 根升华蜡烛兑换 1 个。"], ["长线成本", "全图先祖毕业共需 576 爱心、636 蜡烛、75 升华蜡烛（报告载述）；部分道具花钱也无法减少肝度，反而给平民留出空间。"], ["社交细节", "单场景最多 8 人；加好友需消耗 1 根蜡烛、解锁聊天共需 7 根；看不到他人昵称、不能删好友，只有屏蔽与自定义命名。"]]}}, {"raw": "【调研分享】《集合啦！动物森友会》研究报告.docx", "title": "集合啦！动物森友会", "slug": "调研分享集合啦！动物森友会研究报告docx", "category": "调研分享", "file": "【调研分享】《集合啦！动物森友会》研究报告.docx", "size_bytes": 3669671, "size_human": "3.5 MB", "ext": "docx", "mdate": "2022-03", "chars": 6082, "cjk": 4687, "images": 25, "headings": ["集合啦！动物森友会", "游戏概述", "1.1 产品简介：", "1.2 体验帐号说明", "基本介绍", "2.1 游戏背景", "2.2 游戏画面", "2.3 时间、地域设置", "2.4 游戏地形", "社交系统", "3.1  对NPC", "3.2 对玩家", "商业化", "4.1游戏货币", "4.2 Switch会员服务", "4.3 Amiibo", "后续内容："], "paras": 146, "ov": {"focus": "节奏控制 · 箱庭设计", "tagline": "以「现实时间同步」为节流阀的箱庭式模拟经营，主动放慢节奏来延长内容寿命。", "points": [["时间锁", "游戏时间与现实一致；建房／升级必须等到次日 5 点才交付，大头菜只在周日 5:00–12:00 可买——用延迟交付制造期待，并让大量玩家同一时段上线。"], ["内容门槛", "地形分低／中／高三层，撑杆约 2 天、梯子约 5 天按节奏发放，迫使玩家沿设计路径深度体验，避免完整内容过快暴露。"], ["生态资源系统", "四季、南北半球物种差异，配合 DIY 创作、图鉴收藏、商店交易构成资源开采与消耗的闭环，是报告重点。"], ["社交分级", "好友权限分普通／最佳（后者可用铲斧改动岛屿）；村民好感度初值 25、范围 0–225、划六阶段（报告载述），可邀请动物共 383 只、单岛上限 10 只。"], ["硬件侧商业化", "联机需 Switch Online 会员（约 20 元／月），Amiibo 卡包 3 张约 25 元；稀有村民在二手市场曾出现千元级溢价。"]]}}, {"raw": "【调研分享】一念逍遥 初级研究报告.docx", "title": "一念逍遥", "slug": "调研分享一念逍遥初级研究报告docx", "category": "初级研究", "file": "【调研分享】一念逍遥 初级研究报告.docx", "size_bytes": 50247826, "size_human": "47.9 MB", "ext": "docx", "mdate": "2022-03", "chars": 11998, "cjk": 10143, "images": 151, "headings": ["【调研分享】一念逍遥 初级研究报告", "1. 游戏概述", "1.1产品信息", "1.2游戏主要画面", "2. 核心玩法", "3. 战斗系统", "3.1战斗要素", "3.2战斗模式", "4. 游戏玩法", "4.1新手引导", "4.2城镇玩法", "4.3宗门玩法", "4.4秘境玩法", "4.5洞府玩法", "后续内容："], "paras": 491, "ov": {"focus": "放置效率 · 宗门绑定", "tagline": "把「挂机效率」做成全部养成目标的水墨国风放置修仙。", "points": [["核心公式", "一切养成服务于提升放置性价比；修炼速度＝洞府灵气×吸收率，吸收率由修为境界决定，因此嗑药与吐纳都要压到当日最高境界再用。"], ["离线放置", "可完全离线，且离线角色仍留在地图中可被其他玩家交互，服务器需定期维护清理；挂机约 13 小时上限，背包满后材料转邮件保管。"], ["技能与方向", "修法／炼体双方向，凡界／灵界／仙界各一套技能树；技能状态含定身、致盲、沉默、冰冻等，跨境界时持续效果递减。"], ["保底与产出", "蓝装以上材料或辅材会累积锻造值，满值必出紫色以上；丹师／器师等级越高，高品质丹药与装备产出概率越高。"], ["宗门强绑定", "藏经阁独占技能书与图纸，宗门大阵占灵泉灵脉（统治者采集速度 +20%）；跨服玩法按「宗门乱斗→八荒逐鹿→天下归一」逐层升级。"]]}}, {"raw": "【调研分享】上古王冠研究报告.docx", "title": "上古王冠", "slug": "调研分享上古王冠研究报告docx", "category": "调研分享", "file": "【调研分享】上古王冠研究报告.docx", "size_bytes": 6171896, "size_human": "5.9 MB", "ext": "docx", "mdate": "2022-03", "chars": 2171, "cjk": 1705, "images": 18, "headings": ["上古王冠", "游戏概述", "1.1.产品信息", "1.2.体验账号", "1.3.游戏主要界面", "基本玩法", "2.1. 日常玩法和游戏时长", "2.2.新手带入和新手时长", "战斗系统", "3.1.战斗呈现", "3.2.战斗要素", "后续内容："], "paras": 136, "ov": {"focus": "战斗结构 · 轻量放置", "tagline": "日均 40–60 分钟的轻量竖版放置 RPG，胜负与出手顺序都有明确的数值判定。", "points": [["战斗流程", "最多 5 人布阵、按速度值依次出手，同速时战力高者优先；全自动。胜负除全灭外，还有「限时结束时总生命高于敌方」这一条。"], ["策略层级", "站位权重最高——6 种阵型本身无属性加成，但技能多为「打一排／一列」；元素克制仅 +20% 伤害（报告载述），报告判断其影响远小于技能差距。"], ["设计取向", "同等级英雄之间数值差异很小，战斗变化主要靠状态（增益／减益）差异化来制造。"], ["服务器结构", "官服 iOS 与安卓可同服、但账号数据不互通（苹果分成机制所致）；渠道服与官服不互跨，开服节奏为每天 6 服。"]]}}, {"raw": "【调研分享】古代战争：放置救世主调研报告.docx", "title": "古代战争：放置救世主", "slug": "调研分享古代战争：放置救世主调研报告docx", "category": "调研分享", "file": "【调研分享】古代战争：放置救世主调研报告.docx", "size_bytes": 14618567, "size_human": "13.9 MB", "ext": "docx", "mdate": "2022-03", "chars": 3138, "cjk": 2492, "images": 33, "headings": ["古代战争：放置救世主", "1游戏概述", "1.1产品信息", "1.2体验帐号", "2核心玩法", "2.1游戏介绍", "2.2 游戏时长", "3战斗系统", "4游戏玩法", "4.1   无尽炼狱", "4.2   每日副本", "4.3   游戏探索", "4.4   图鉴馆", "4.5   世界BOSS", "4.6   模拟战", "4.7   其它系统", "5社交系统", "后续内容："], "paras": 118, "ov": {"focus": "反卡点 · 社交即主体", "tagline": "以「零门槛＋强社交」为卖点的小众放置，几处设计刻意与主流做法反着来。", "points": [["睡觉变强", "离线收益只比在线低 10%；每日 0 点当前关卡怪物属性 −5%、最多累计 −30%（报告载述），前中期几乎不存在硬卡点。"], ["抽卡保底", "初始 SSS 概率 1%，每次未中 +6%，多数玩家第 5–6 次出货（报告载述）；无 VIP、无密集氪金活动，所有资源均开放获取与合成。"], ["反滚服", "血战按每 20 级分赛区，老区还有更高世界 BOSS 奖励与经验加成，报告观察到不冲榜的玩家反而更愿意留在老区。"], ["社交即主体", "聊天窗口占屏一半、任意界面可切全屏；用注册方式限制加「小黑屋」（违规者发言仅自己可见）替代封号，频道几乎无广告。"], ["战斗", "6 人上阵、速度定序、10 回合上限、竖版全自动，配合 12 小时离线经验构成主要成长来源。"]]}}, {"raw": "【调研分享】叫我大掌柜 台服调研报告.docx", "title": "叫我大掌柜 台服", "slug": "调研分享叫我大掌柜台服调研报告docx", "category": "调研分享", "file": "【调研分享】叫我大掌柜 台服调研报告.docx", "size_bytes": 14214940, "size_human": "13.6 MB", "ext": "docx", "mdate": "2022-03", "chars": 4309, "cjk": 3355, "images": 55, "headings": ["【调研分享】叫我大掌柜 台服调研报告", "游戏概述", "1.1产品信息", "1.2游戏总述", "游戏美术风格", "2.1场景", "2.2角色", "游戏玩法", "3.1商铺经营", "3.2主线关卡", "3.3游历", "后续内容："], "paras": 218, "ov": {"focus": "单指标数值 · 点击驱动", "tagline": "把全部玩法收敛到单一「赚速」数值的点击式经营，主动取消策略性。", "points": [["去策略", "取消统一体力设定，改为各玩法独立次数限制；所有玩法都推动同一指标「赚速」（即战力），玩家不必再思考资源分配。"], ["目标切分", "极长养成线被拆到个位数级的阶段目标，光完成日常就能连破数关，降低「被卡战力」的感知、抬升平民留存。"], ["核心交互", "主要玩法是连续点击（报告类比斯金纳箱）；一大付费点正是「把几百次点击压缩成一键领取」的快感。"], ["建筑循环", "获取资源→升级建筑→提高每秒银两；医馆、客栈、钱庄各带独立小玩法（接诊流程、五菜系炒菜、3×5 柜台四类产值）。"], ["主线与游历", "主线靠贸易点击推进，9 次点击一循环、银两消耗递增，BOSS 战只比门客总战力；游历按地点触发好感度、赌博、品酒等事件，撑起收集线。"]]}}, {"raw": "【调研分享】坎公骑冠剑 研究报告.docx", "title": "坎公骑冠剑", "slug": "调研分享坎公骑冠剑研究报告docx", "category": "调研分享", "file": "【调研分享】坎公骑冠剑 研究报告.docx", "size_bytes": 25456524, "size_human": "24.3 MB", "ext": "docx", "mdate": "2022-03", "chars": 5082, "cjk": 4090, "images": 41, "headings": ["【调研分享】坎公骑冠剑 研究报告", "游戏概述", "1.1产品信息", "1.2排行榜情况：", "体验玩法", "1.1日常玩法与游戏时长", "1.2新手带入和新手时长", "1.3游戏目标", "包装", "1.1文案剧情", "1.2美术风格", "战斗系统", "1.1战斗流程", "1.2战斗元素", "后续内容："], "paras": 204, "ov": {"focus": "战斗设计 · 包装逻辑", "tagline": "用「梗文化＋像素召唤结构」撑起老套冒险框架的 2D 像素解谜 RPG。", "points": [["战斗结构", "4 人小队但只操控队长，其余 3 人为 AI 且不能释放武器技能；全武器自动锁敌，近战攻击会自动向目标拉近身位。"], ["属性数值", "克制造成 130%、被克 70%、无关 100%，装备与英雄同属性额外 +10% 属性攻击（报告载述）；攻击属性随武器走、防御属性随英雄走。"], ["组合技链", "武器技能造成重伤／击倒／击飞异常，异常值满后可接力触发连锁技能，内置 20 秒 CD；重伤使目标 2.5 秒失控且无视免疫盾。"], ["包装逻辑", "像素的抽象性带来「召唤结构」，为剧本埋梗（龙珠、JOJO、逆转裁判等）留出空间；情绪靠夸张表情、镜头推拉与 BGM 放大。"], ["市场表现", "国服上线 7 天全平台流水约 1.3 亿；海外除中国累计约 14 亿、下载 700 万，Google Play 34.9 万评价 4.68 分（报告载述）。"]]}}, {"raw": "【调研分享】天地劫研究报告.docx", "title": "天地劫", "slug": "调研分享天地劫研究报告docx", "category": "调研分享", "file": "【调研分享】天地劫研究报告.docx", "size_bytes": 25259499, "size_human": "24.1 MB", "ext": "docx", "mdate": "2022-03", "chars": 7425, "cjk": 6279, "images": 44, "headings": ["【调研分享】天地劫研究报告", "游戏概述", "1.1.产品信息", "1.2.账号体验", "体验玩法", "2.1.日常玩法和游戏时长", "2.2.新手带入和新手时长", "2.3.游戏目标", "IP与包装", "3.1.IP与剧情", "3.2.美术画风", "3.3.UI&UE", "战斗系统", "4.1.战斗流程", "4.2.战斗要素", "4.3.战斗表现", "后续内容："], "paras": 213, "ov": {"focus": "战棋地形 · 品质升级", "tagline": "继承《梦幻模拟战》骨架、以 3D 场景与全语音叙事做品质升级的 SRPG 战棋。", "points": [["机制承袭", "冰／火／雷三角对应梦战骑／步／枪，弓克飞、光克暗同样复刻；克制效果为自身攻击 +30%、敌方攻击 −25%（报告载述）。"], ["职业分工", "铁卫／侠客／御风／羽士／咒师／祝由六职业；羽士只能打 2 格（1 格敌人无法反击），咒师与祝由近身攻击会触发敌方「先攻」。"], ["地形即玩法", "栅栏物免、篝火暴击、毒气每回合 −10% 气血、真炎 −24% 气血、霜冻移动 −1、雷场被暴击率 +20%；部分奖励需飞行／轻功单位跨地形才能取到。"], ["BUFF 规则", "不同类别增益无上限可叠加，同类增益采用覆盖制取最大值（报告载述）。"], ["口碑与风险", "TapTap 由内测 9.2 跌至公测 6.8，好评集中在 IP／画面／音效、差评集中在抽卡与运营；报告点出「自动战斗 AI 弱」与「优质演出被养成进度逼着跳过」的结构矛盾。"]]}}, {"raw": "【调研分享】守望黎明研究报告.docx", "title": "守望黎明", "slug": "调研分享守望黎明研究报告docx", "category": "调研分享", "file": "【调研分享】守望黎明研究报告.docx", "size_bytes": 6024170, "size_human": "5.7 MB", "ext": "docx", "mdate": "2022-03", "chars": 5845, "cjk": 4639, "images": 33, "headings": ["守望黎明", "游戏概述", "1.1.   产品信息", "1.2.   体验账号", "战斗系统详解", "2.1.   编队详解", "2.2.   行军速度大致解析", "2.3.   集结规则", "2.4.   士兵数量无限", "2.5.   编队的战斗规则", "2.6.   一些战斗规则", "2.7.   兵力消耗类型", "2.8.   守城战斗", "2.9.   兵多有用吗？", "2.10.      城墙耐久和破坏值的关系", "2.11.      侦查", "2.12.      战争守护", "2.13.      战报", "2.14.      资源掠夺", "后续内容："], "paras": 210, "ov": {"focus": "战斗公式 · 战报级拆解", "tagline": "把 SLG 战斗拆到「编队—距离—损耗」层层可算的末日题材产品，几乎全篇是规则量化。", "points": [["地图量化", "地图 1200×1200 格、每格 1 公里，一城占 2×2 格；编队行军速度取最慢小队，速度 30 的 7 级改装车每公里约 1.5 秒（报告载述）。"], ["编队战斗", "前／中／后排距离分别为 1／3／5，技能只在有效距离内生效；8 回合定胜负，进攻方未胜即判负；兵力消耗＝被打掉血量的一半。"], ["损耗三态", "轻伤回城即愈、重伤进帐篷需资源治疗、死亡不可逆；攻城方全部重伤直接转死亡，急救帐篷装不下的也直接死亡。"], ["集结与破城", "集结时间 5／10／30／60 分钟，且战斗结果出来前无法补兵；城墙耐久被打穿即「打飞」并强制随机迁城，落地恢复 500 点。"], ["反直觉结论", "可无限出兵，但空闲兵不参与守城；等级压制严重（T9 压 T8），中等玩家屯兵反而送人头。掠夺固定为编队 95% 负重四资源均分＋5% 负重金币。"]]}}, {"raw": "【调研分享】崩坏3rd研究报告.docx", "title": "崩坏3rd", "slug": "调研分享崩坏3rd研究报告docx", "category": "调研分享", "file": "【调研分享】崩坏3rd研究报告.docx", "size_bytes": 22117610, "size_human": "21.1 MB", "ext": "docx", "mdate": "2022-03", "chars": 9821, "cjk": 7887, "images": 67, "headings": ["崩坏3rd", "游戏概述", "1.1．产品信息", "1.2．体验账号说明", "游戏背景设定", "2.1.游戏背景", "2.2.关键词释义", "游戏玩法设计", "3.1.游戏新手引导", "3.2.日常玩法", "3.3.PVP向玩法", "3.4.多人联机玩法", "3.5.开放世界", "3.6.玩法总结", "商业化设计", "4.1. 付费系统", "4.2. 补给系统", "4.3. 付费系统分析", "4.4. 游戏运营", "后续内容"], "paras": 296, "ov": {"focus": "商业化三层 · 二次元运营", "tagline": "以「贩卖人设」为第二盈利轴的二次元动作手游，本份把商业化拆成三层并给足价格口径。", "points": [["盈利分层", "Pay to win（角色／武器／圣痕）、Pay to cool（服装／舰桥）、Pay to love（人设）；立绘、声优、剧情、PV、动画短片都服务于人设这一核心。"], ["保底体系", "扩充补给 100 抽必出当期 S 且次数可跨池继承；精准补给 10 抽保底 4 星、但武器与圣痕常无保底；扩充装备池 50 连必出 UP 且不重复，最非约 200 抽（5.6 万水）毕业。"], ["白嫖口径", "每月免费约 8000 水晶、月卡党约 1.1 万；水晶:RMB 约 10:1，月卡 30 元合计 3100 水（报告载述），据此推算三个版本可攒出一个 S。"], ["竞速型 PVP", "并无真 PVP：超弦空间按 20 人一组、4 关积分，用「天气效果」逼玩家培养多套阵容；扰动幅度会随全体通关时间动态上调难度。"], ["生态运营", "约 45 天一版本、几乎无长草期；生日礼物、女武神来电、给满级玩家寄实体零食礼包，长期经营粉丝关系。"]]}}, {"raw": "【调研分享】放置少女 初级研究报告.docx", "title": "放置少女", "slug": "调研分享放置少女初级研究报告docx", "category": "初级研究", "file": "【调研分享】放置少女 初级研究报告.docx", "size_bytes": 10494970, "size_human": "10.0 MB", "ext": "docx", "mdate": "2022-03", "chars": 4051, "cjk": 3061, "images": 46, "headings": ["【调研分享】放置少女 初级研究报告", "游戏概述", "产品信息", "战斗系统", "2.1战斗要素", "核心玩法", "3.1 日常玩法和游戏时长", "3.2 新手带入和新手时长", "3.3 挂机地图", "3.4 玩法", "后续内容："], "paras": 213, "ov": {"focus": "技能颗粒度 · 日本市场", "tagline": "三国娘化＋「超简单」放置，主战场在日本市场；报告把技能颗粒度拆得很细。", "points": [["战斗单位", "1 主将＋出阵副将＋应援副将（阵亡后每回合补 1 名）；上场数随等级解锁，90 级时出阵与应援合计 11 名。"], ["技能分类", "攻击技能按单体／群攻／连击／追加（会心、击杀、Debuff、血量阈值触发）／特殊索敌拆分；回复技能按对象数、次数、最小与最大倍率、会心倍率逐项定义。"], ["奥义", "由「持有特定副将组合」触发的被动加成，无需上场即可生效，多个奥义可叠加。"], ["极致轻量", "日常任务约 3–4 分钟、战斗全可跳过；放置收益受挂机时长、地图等级、加成副将与活动翻倍影响，仓库满后溢出装备自动转铜货。"], ["公会战分层", "倾国的战役（本服前 16 同盟）→ 群雄争霸（4 服 48 同盟分黄金／白银／青铜）→ 战姬无双 → 皇室的阴谋，逐级开放。"], ["市场", "2021 年 Q1 日本手游收入榜第 11、中国手游在日收入第 3（报告载述）。"]]}}, {"raw": "【调研分享】斗罗大陆-斗神再临研究报告.docx", "title": "斗罗大陆-斗神再临", "slug": "调研分享斗罗大陆斗神再临研究报告docx", "category": "调研分享", "file": "【调研分享】斗罗大陆-斗神再临研究报告.docx", "size_bytes": 25904842, "size_human": "24.7 MB", "ext": "docx", "mdate": "2022-03", "chars": 7366, "cjk": 5979, "images": 86, "headings": ["【调研分享】斗罗大陆-斗神再临研究报告", "游戏概述", "1.1产品信息", "1.2游戏速览", "战斗系统", "2.1战前准备", "2.2战斗机制", "2.3策略性分析", "游戏养成系统", "3.1战力构成总览", "3.2角色的收集和养成", "后续内容："], "paras": 255, "ov": {"focus": "魂环策略 · 战力构成", "tagline": "MMORPG 大地图＋卡牌战斗＋放置减负的混合体，策略核心落在「魂环」而非地图。", "points": [["战斗", "即时制但手动只能放技能、不能移动或选目标；武魂技每攻击 +1 能量、9 点可放，武魂真身需 100 点（放武魂技 +25、被击 +10）。"], ["魂环即宝石", "每 10 级开一槽、100 级共 10 槽，同名魂环只能装 1 个；技能由角色自带、魂环仅负责激活，故中期起只有能开满 10 槽的 SSR 值得培养。"], ["星级与增幅", "10 碎片升 1 星、每 6 星染色，升满需 37 张同名卡；金色 6 星给「魂环年限增幅」，如 1.3 万年魂环按 +30% 计为 1.69 万年（报告载述）。"], ["战力构成", "总战力＝上阵 5 人战力之和；报告点名装备强化数值占比过重，压低了魂环搭配本应有的策略价值。"], ["抽卡与重置", "普通池 SSR 10%、49 抽保底且提前出货不重置；主题池 99 抽必得当期角色。每抽到一个 SSR 送 1 个「月光宝盒」，可近乎无损重置，鼓励大胆试阵容。"]]}}, {"raw": "【调研分享】朕的江山研究报告.docx", "title": "朕的江山", "slug": "调研分享朕的江山研究报告docx", "category": "调研分享", "file": "【调研分享】朕的江山研究报告.docx", "size_bytes": 23737731, "size_human": "22.6 MB", "ext": "docx", "mdate": "2022-03", "chars": 7373, "cjk": 6397, "images": 64, "headings": ["朕的江山", "游戏概述", "1.1产品信息", "1.2体验账号", "基础设定", "2.1新手带入和新手时长", "2.2主界面", "核心玩法", "3.1战区资源", "3.2普通战（吃鸡玩法）", "3.3赛季模式", "3.4周末活动", "商业化", "后续内容"], "paras": 324, "ov": {"focus": "吃鸡化 SLG · 局内经济", "tagline": "把「吃鸡」赛制搬进三国 SLG，用单局 2–120 小时的对局替代长线养成服。", "points": [["局制", "8 人按官职匹配，一局 2–120 小时，游戏内 1 年＝1 小时，统一在公元 280 年结算；胜利条件为灭尽他方或占城最多。"], ["局内经济", "铜钱／粮草／兵力分离：兵力归城池所有、需运输到前线；民居／集市／农田共 10 个建筑位，产出本局全局共享。"], ["全自动战斗", "进场即自动、玩家只能观战；每回合普攻或怒气技，怒气靠命中累积，攻城战上限 100 回合，且无伤兵概念。"], ["时间与外交", "开局 2 小时保护期；夜间 0–9 点初始城免战、但打玩家城需 10 倍粮草；最多 2 人同盟，可结盟也可背刺。"], ["商业化联动", "普通／重金／限定三类卡池；限定招募令主要靠参与主题季活动获取，用付费点反向拉动玩法生态的活跃度。"]]}}, {"raw": "【调研分享】江南百景图调研报告.docx", "title": "江南百景图", "slug": "调研分享江南百景图调研报告docx", "category": "调研分享", "file": "【调研分享】江南百景图调研报告.docx", "size_bytes": 15616868, "size_human": "14.9 MB", "ext": "docx", "mdate": "2022-03", "chars": 2835, "cjk": 2302, "images": 45, "headings": ["江南百景图", "游戏概述", "1.1.产品信息", "1.2.体验账号", "1.3.游戏画面", "1.4.游戏目的（附带背景故事）", "居民养成", "2.1.稀有度", "2.2.属性", "2.3.能力", "2.4.等级", "2.5.珍宝", "2.6.居民进阶", "社交系统", "3.1.友情点互送", "3.2.土行孙", "商业化", "4.1.  氪金系统", "4.2.  礼包", "4.3.  看广告", "4.4.  月卡", "后续内容："], "paras": 153, "ov": {"focus": "居民分工 · 广告变现", "tagline": "以「居民属性分工」为骨架、以激励广告为主要变现的单机向水墨经营。", "points": [["居民五维", "建造／农牧／制作／理财／冒险，属性固定非随机；天级带 1–2 条「特级」属性，成长差异随等级越拉越大。"], ["养成线", "读书升级（每人 2 本偏好书给 2 倍经验、上限 50 级）、珍宝每人 1 件按属性匹配（矿锭 +10／+100／+1000 经验，每 10 级需同名珍宝进阶）、重复角色转 5 碎片用于进阶。"], ["变现主体", "不是抽卡而是激励广告：所有工作可看广告加速 15 分钟（约 5 分钟恢复 1 次、可存 3 次）、客栈临时招工最多 4 人、乞丐广告给补天石。"], ["极弱社交", "仅友情点互送与「土行孙」（10 件物品可分给 9 位好友），无聊天系统；单机向、不开新服。"], ["月卡差异", "主要体现在「存建筑无数量限制」，非月卡玩家只能存 10 个。"]]}}, {"raw": "【调研分享】火焰审判 初级研究报告.docx", "title": "火焰审判", "slug": "调研分享火焰审判初级研究报告docx", "category": "初级研究", "file": "【调研分享】火焰审判 初级研究报告.docx", "size_bytes": 22374552, "size_human": "21.3 MB", "ext": "docx", "mdate": "2022-03", "chars": 7577, "cjk": 6238, "images": 58, "headings": ["【调研分享】火焰审判 初级研究报告", "游戏概述", "1.1产品信息", "1.2游戏画面展示", "游戏设定", "2.1游戏背景", "2.2新手引导", "2.3任务选择", "2.4竞争机制", "核心玩法", "战斗系统", "4.1战斗呈现", "4.2战斗要素", "后续内容："], "paras": 258, "ov": {"focus": "资源引擎 · Roguelite 战棋", "tagline": "把「弃牌换意志力」作为唯一资源引擎的战棋 × 牌库构筑单机游戏。", "points": [["意志力闭环", "初始为 0，必须弃手牌到回收神龛换取（1 牌＝1 点）；弃牌可三选一使用——花意志力打牌／该英雄移动 2 格／回合结束未用则转为 2 点护甲。"], ["装备即卡牌", "牌组＝角色初始卡组＋专属卡＋装备卡＋事件卡；高品质装备带来更多卡牌与「品质数」，品质数即每场重抽次数，橙装 3 张卡、品质数 2。"], ["双状态条", "士气五档，从 +2 品质／+2 防具到 −2／−3，最低档持续不打主线会直接结束游戏；体力下降则往牌组塞无法利用的疲劳卡。"], ["死亡惩罚", "单角色阵亡不除名，但往牌组塞「弱点卡」占位，需营地草药或打赢主线 BOSS 治愈；团灭则本局结束（一把约 3 小时）。"], ["环境即变量", "雷电高亮区、太阳天需贴障碍物、远程卡受遮挡而魔法不受，部分卡牌反而只能借障碍物打到敌人。"], ["难度", "从简单／中等／困难到大灾变 1–10 逐级解锁；排行榜不区分难度与生存天数，只按任务结束积分排名。"]]}}, {"raw": "【调研分享】率土之滨 研究报告.docx", "title": "率土之滨", "slug": "调研分享率土之滨研究报告docx", "category": "调研分享", "file": "【调研分享】率土之滨 研究报告.docx", "size_bytes": 6710773, "size_human": "6.4 MB", "ext": "docx", "mdate": "2022-03", "chars": 5612, "cjk": 4556, "images": 14, "headings": ["率土之滨", "1   游戏概述", "1.1  产品信息", "1.2  体验帐号说明", "2   核心玩法", "2.1 日常玩法和游戏时长", "2.2  新手带入和新手时长", "2.3  竞争机制", "2.4  游戏目标", "后续内容："], "paras": 142, "ov": {"focus": "减法设计 · 赛季节奏", "tagline": "以「武将＋战法」为唯一核心养成、主动放弃战力榜与资源掠夺的沙盘 SLG 原型。", "points": [["减法设计", "抛弃装备与「战力」概念，改用占地获得的「势力值」排名，弱化付费阶层心理落差；无竞技场、无闯关，仅每日 1 次演武。"], ["竞争替代", "击败玩家不抢资源，只令其「沦陷」（需同盟解救或缴资源脱离），杜绝小号养大号与资源商；代价是失去「损兵→付费→复仇」这条营收循环。"], ["赛季节奏", "前期 1–7 天（新手 48 小时保护、出征 10 体力、日均 7–8 小时）→ 中期 7–30 天（同盟打城／州战）→ 后期 30–70 天（争夺征服／割据名额）；单季由约 90 天缩至 70 天。"], ["卡包分层", "名将每 5 次必出 4–5 星，报告据 4 个号连续 3 个月样本推测约第 40 次（38–42）必出 5 星；限时名将把核心将拆进小卡包，赛季卡包产出绝版武将，赛季初形成集中充值点。"], ["目标链", "核心目标是「获得更多高品质武将」，占领洛阳为玩法大目标，向下拆出打通关卡、武将／战法养成、加入同盟等子目标。"], ["流浪军", "2017 年 8 月上线，以战养战、按武勋排名给割据名额，补上不跟随同盟的玩家也能拿到奖励的缺口。"]]}}, {"raw": "【调研分享】航海王热血航线研究报告.docx", "title": "航海王热血航线", "slug": "调研分享航海王热血航线研究报告docx", "category": "调研分享", "file": "【调研分享】航海王热血航线研究报告.docx", "size_bytes": 13222166, "size_human": "12.6 MB", "ext": "docx", "mdate": "2022-03", "chars": 4165, "cjk": 3562, "images": 31, "headings": ["【调研分享】航海王热血航线研究报告", "一.产品概述", "1.1产品信息", "1.2体验账号", "1.3玩家信息", "二.战斗系统", "2.1.基础编队", "2.2.战斗操作", "2.3.技能设计", "2.4.战斗技巧设计", "2.5.特别设计", "三.大地图探索", "3.1.海域探索", "3.2.各式小游戏", "3.3.藏宝图", "后续内容："], "paras": 185, "ov": {"focus": "动作技巧 · 公平竞技", "tagline": "以「保护型＋操作型」双套技巧设计支撑公平竞技的 IP 动作手游。", "points": [["竞技场平衡", "参战角色属性不受等级、卡片影响，敌我同一角色数值完全相同，付费不带来 PVP 数值优势。"], ["保护型技巧", "倒地保护（起身无敌）、闪避无敌帧（冷却耗尽有惩罚期）、连击保护（隐藏保护值满触发无敌、奥义不累积）、霸体——防止技术碾压。"], ["操作型技巧", "抓取可破霸体并抓起未触发保护的倒地目标、击飞撑起连段、明显前摇后摇（普攻后摇可用技能取消）——给操作留出成长空间。"], ["编队与能量", "PVE 2 名主战互相 +20% 属性、各带 1 名助战；PVP 3 人依次上阵。怒气在 PVP 跨小局继承、爆气能量随时间与攻受增长。"], ["IP 还原", "招式带漫画字、终极奥义带动画；大地图探索用隐藏剧情、藏宝图、钓鱼等小游戏碎片化回顾原作剧情。"]]}}, {"raw": "【调研分享】赛马娘 初级研究报告.docx", "title": "赛马娘", "slug": "调研分享赛马娘初级研究报告docx", "category": "初级研究", "file": "【调研分享】赛马娘 初级研究报告.docx", "size_bytes": 32056791, "size_human": "30.6 MB", "ext": "docx", "mdate": "2022-03", "chars": 8998, "cjk": 7282, "images": 80, "headings": ["【调研分享】赛马娘 初级研究报告", "1 、游戏概述", "1.1产品信息", "2 、核心玩法", "2.1日常玩法和游戏时长", "2.2竞争机制", "3、养成系统", "3.1角色/卡池概述", "3.2 P卡详述", "3.3 S卡详述(支援卡，游戏内名为サポートカード)", "3.4 FES卡详述", "3.5 育成", "3.6 育成的随机性", "3.7赛马娘的养成系统总结", "后续内容："], "paras": 347, "ov": {"focus": "育成循环 · 随机性", "tagline": "把 Roguelike 随机性与「三代继承」做成单局可重复循环的二次元养成。", "points": [["三类卡", "P 卡（角色，需育成才能变成 FES 战斗卡）、S 卡（支援卡，育成前带 6 张）、FES 卡（育成产物，可作下一代继承马）；同一张 P 卡可反复育成出不同数值的 FES 卡。"], ["五维与适性", "速度／耐力／力量／毅力／智力，外加场地（草／沙）、距离、跑法（逃／先行／差／追）三项 A–G 评级。"], ["继承机制", "育成结束随机赋予蓝／粉／绿／白因子（各 1–3 星），且要追溯父母与祖辈共 6 匹；刷 9 星种马是主要肝点，一次育成约 30–60 分钟、仅耗 30 体力。"], ["训练公式", "训练数值增加量＝基础增加值×友情加成×训练效果 UP×心情效果×马娘自身成长加成，舍弃小数点（报告载述）。"], ["竞技场反内卷", "移除排名争夺，改按历史最高比分排名；奖励只分晋级／维持／降级三类，同一圈内第一名与末位收益相同，一周打一把即可。"], ["市场", "上线首月收入超 1.3 亿美元，Cygames 收入环比 +268%（报告载述）。"]]}}, {"raw": "【调研分享】阴阳师 研究报告.docx", "title": "阴阳师", "slug": "调研分享阴阳师研究报告docx", "category": "调研分享", "file": "【调研分享】阴阳师 研究报告.docx", "size_bytes": 16815354, "size_human": "16.0 MB", "ext": "docx", "mdate": "2022-03", "chars": 3343, "cjk": 2732, "images": 30, "headings": ["阴阳师", "游戏概述", "1.1.产品信息", "1.2.体验账号说明", "社交系统", "2.1.组队系统", "2.2.多人聊天系统", "2.3.私聊系统", "2.4.空间系统", "2.5.好友度与协战系统", "2.6.友人帐系统", "2.7.现世邀约系统", "2.8.直播系统", "2.9.斗图", "后续内容："], "paras": 155, "ov": {"focus": "社交专题 · 全服共享", "tagline": "本份专攻社交系统，可视为「长线卡牌如何用全服共享组队避免合服」的样本。", "points": [["服务器结构", "分 iOS／安卓／双平台／全平台四类，但传统副本组队与好友关系跨全服共享——报告认为这是上线多年从未合服的关键原因。"], ["聊天分层", "系统频道可按需求一键加入他人稀有副本队伍；附近频道显示玩家间距离且跨服，是人气最高的频道；群组不受服务器限制且无广告。"], ["好友度阶梯", "150／1000／2000 三档，150 档即解锁「协战」（每天可用对方 1 只式神 15 次），自然形成师徒与互带关系。"], ["友人帐", "游戏内微博：话题榜、名人堂（每月 20 日更新）、头条（每日 12:00 更新），玩家可自建话题并发布图文视频动态。"], ["直播与斗图", "看播／送礼／被送均得舞台积分（约 80 万金币换 400 积分），送礼只消耗基础货币；支持上传自制表情包。"], ["短板", "无单点屏蔽导致世界频道广告泛滥；好友一页仅 5 个、无搜索与排名，消息也不会把来信好友置顶。"]]}}, {"raw": "【调研分享】鸿图之下调研报告.docx", "title": "鸿图之下", "slug": "调研分享鸿图之下调研报告docx", "category": "调研分享", "file": "【调研分享】鸿图之下调研报告.docx", "size_bytes": 969165, "size_human": "946.5 KB", "ext": "docx", "mdate": "2022-03", "chars": 3890, "cjk": 3306, "images": 9, "headings": ["鸿图之下", "游戏概述", "1.1产品信息", "连地规则", "2.1地块形状", "2.2土地攻占时间", "2.3领地概念", "2.4哨塔和领地的关系", "与战略版的差异", "3.1宏观差异", "3.2微观差异", "个人评价", "4.1首发成绩分析", "4.2个人分析", "后续内容："], "paras": 177, "ov": {"focus": "竞品逐项对照 · 复杂度批评", "tagline": "以《三国志·战略版》为逐项对照系的差异化批评，核心议题是「系统复杂度值不值」。", "points": [["连地规则", "地块为正六边形；击败守军后立即归属，但 5 分钟内免战且无法连地。战略版需读条 5 分钟占领、之后 30 分钟免战——报告认为后者在对垒时战略纵深更强。"], ["领地概念", "主城周围 4 格内打地无需连地；哨塔占 1 格并生成以自身为中心 5 格的新领地，形成扩张节点。"], ["复杂度批评", "战斗为「时间制＋阵法＋站位就近」综合系统且天气、政治属性影响武技；行军令用途过广却不能提高上限；工坊被拆成 4 个建筑；日常不间断做完约需 45 分钟。"], ["金珠投放", "两天一小更、一周一大更，靠活动与维护补偿大量送珠，报告认为这削弱了月卡党的付费意义。"], ["用户错位", "QQ 开区数多于微信，判断流量偏年轻（00 后），而当时国内 SLG 主力是有付费能力的中年群体；立绘掺二次元风格又进一步劝退后者。"], ["结果", "策略榜首仅维持 77 小时后一路下滑、无明显回升（报告载述），报告据此认为玩家对当时的完成度并不满意。"]]}}];
+const CAT_ORDER = ['深度研究','调研报告','初级研究','调研分享','其他'];
+let curCat = '全部';
+let curSort = 'default';
+let curQuery = '';
+let activeSlug = null;
+
+function filtered(){
+  let arr = DATA.filter(g=>{
+    if(curCat!=='全部' && g.category!==curCat) return false;
+    if(curQuery){
+      const q = curQuery.toLowerCase();
+      if(!(g.title.toLowerCase().includes(q) || g.raw.toLowerCase().includes(q))) return false;
+    }
+    return true;
+  });
+  if(curSort==='name') arr.sort((a,b)=>a.title.localeCompare(b.title,'zh'));
+  else if(curSort==='size') arr.sort((a,b)=>b.size_bytes-a.size_bytes);
+  else if(curSort==='chars') arr.sort((a,b)=>b.chars-a.chars);
+  else if(curSort==='date') arr.sort((a,b)=>String(b.mdate).localeCompare(String(a.mdate)));
+  return arr;
+}
+
+function renderCatOptions(){
+  const counts = {};
+  DATA.forEach(g=>counts[g.category]=(counts[g.category]||0)+1);
+  const cats = ['全部', ...CAT_ORDER.filter(c=>counts[c])];
+  const sel = document.getElementById('cat');
+  sel.innerHTML = cats.map(c=>{
+    const n = c==='全部'?DATA.length:counts[c];
+    return '<option value="'+esc(c)+'">'+esc(c)+'（'+n+'）</option>';
+  }).join('');
+  sel.value = curCat;
+}
+
+function renderList(arr){
+  const list = document.getElementById('list');
+  list.innerHTML='';
+  if(arr.length===0){ list.innerHTML='<div class="empty">没有匹配的游戏</div>'; return; }
+  arr.forEach(g=>{
+    const d = document.createElement('div');
+    d.className = 'item'+(g.slug===activeSlug?' on':'');
+    d.innerHTML = '<div class="t">'+esc(g.title)+'</div>'+
+      '<div class="m"><span class="badge cat">'+esc(g.category)+'</span></div>';
+    d.onclick = ()=>{ activeSlug=g.slug; render(); };
+    list.appendChild(d);
+  });
+}
+
+function renderDetail(g){
+  const wrap = document.getElementById('wrap');
+  if(!g){ wrap.innerHTML='<div class="placeholder">← 从上方选择一份调研报告查看内容</div>'; return; }
+  const ov = g.ov;
+  const rows = ov.points.map(p =>
+    '<div class="ov-row"><dt><span>'+esc(p[0])+'</span></dt><dd>'+esc(p[1])+'</dd></div>').join('');
+  wrap.innerHTML =
+    '<div class="detail">'+
+      '<h2>'+esc(g.title)+'</h2>'+
+      '<div class="hd-meta"><span class="badge cat">'+esc(g.category)+'</span>'+
+        '<span class="badge focus">'+esc(ov.focus)+'</span>'+
+        '<span class="badge date">资料时间 '+esc(g.mdate)+'</span></div>'+
+      '<div class="sec">内容概览</div>'+
+        '<div class="lead">'+esc(ov.tagline)+'</div>'+
+        '<dl class="ov">'+rows+'</dl>'+
+      '<div class="foot">口径说明：本页内容要点为对原报告的逐份提炼，其中数值、倍率、档位与运营数据均为<span>报告载述</span>，反映各报告调研时点（多为 2020–2021 年）的情况，未经独立复算，引用请以原件为准。<br>'+
+        '标签「资料时间」取自源文件最后修改日期（合并条目取较晚者）；合集共 '+DATA.length+' 份。</div>'+
+    '</div>';
+}
+
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function render(){
+  const arr = filtered();
+  if(!activeSlug || !arr.some(g=>g.slug===activeSlug)){
+    activeSlug = arr.length? arr[0].slug : null;
+  }
+  renderList(arr);
+  renderDetail(arr.find(x=>x.slug===activeSlug) || null);
+  document.getElementById('count').textContent = '共 '+DATA.length+' 份 · 当前显示 '+arr.length+' 份';
+}
+
+document.getElementById('cat').addEventListener('change', e=>{ curCat=e.target.value; activeSlug=null; render(); });
+document.getElementById('search').addEventListener('input', e=>{ curQuery=e.target.value.trim(); activeSlug=null; render(); });
+document.getElementById('sort').addEventListener('change', e=>{ curSort=e.target.value; activeSlug=null; render(); });
+document.addEventListener('keydown', e=>{
+  const arr = filtered();
+  const idx = arr.findIndex(g=>g.slug===activeSlug);
+  if(e.key==='ArrowDown' && idx<arr.length-1){ activeSlug=arr[idx+1].slug; render(); e.preventDefault(); }
+  if(e.key==='ArrowUp' && idx>0){ activeSlug=arr[idx-1].slug; render(); e.preventDefault(); }
+});
+
+renderCatOptions();
+render();
+</script>
+</body>
+</html>
