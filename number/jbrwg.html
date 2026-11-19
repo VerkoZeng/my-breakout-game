@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>《姜饼人王国》战斗数值逆向拆解 · 减伤双轨与免伤率函数的闭合</title>
+<style>
+
+:root{
+  --bg:#12141a; --bg2:#181b23; --panel:#1e222c; --panel2:#232833;
+  --line:#2e3442; --line2:#3b4354;
+  --tx:#e8eaef; --tx2:#a8b0c0; --tx3:#727c8e;
+  --acc:#d9b06a; --acc2:#e8c98a;
+  --blue:#6aa9e0; --purple:#a98fd8; --red:#e07a70; --green:#6fc08a;
+  --r:10px;
+  /* 兼容旧正文内联样式所用的变量名 */
+  --ink:var(--tx); --ink2:var(--tx2); --muted:var(--tx3);
+  --card:var(--panel); --indigo:var(--acc); --indigo2:var(--acc2);
+  --amber:var(--blue);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; padding-top:54px; background:var(--bg); color:var(--tx);
+  font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",system-ui,sans-serif;
+  font-size:15px; line-height:1.75; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:900px; margin:0 auto; padding:34px 26px 80px}
+.wrap.hero{padding-bottom:10px}
+code{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  background:#2a2f3c; padding:1px 5px; border-radius:4px; font-size:.88em;
+  color:var(--acc2); white-space:nowrap}
+p{margin:11px 0}
+
+/* Hero */
+.tag{display:inline-block; font-size:12px; letter-spacing:.14em;
+  background:rgba(217,176,106,.13); color:var(--acc2);
+  border:1px solid rgba(217,176,106,.3); border-radius:14px; padding:3px 12px; margin-bottom:14px}
+.hero h1{font-size:31px; font-weight:700; line-height:1.32; letter-spacing:.01em;
+  margin:0 0 16px; color:var(--tx)}
+.hero h1 span{color:var(--acc2)}
+.hero .lead{color:var(--tx2); font-size:14.2px; line-height:1.95; margin:0; max-width:940px}
+.hero .lead b{color:var(--tx); font-weight:600}
+.stats{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:26px 0 4px}
+.stat{background:var(--panel); border:1px solid var(--line); border-radius:var(--r); padding:14px 15px}
+.stat b{display:block; font-size:24px; font-weight:700; color:var(--acc2);
+  font-family:"SFMono-Regular",Consolas,monospace; line-height:1.2}
+.stat span{font-size:12.5px; color:var(--tx3); line-height:1.5; display:block; margin-top:3px}
+
+/* 固定顶部导航：左 eyebrow / 右 toc */
+.topbar{position:fixed; top:0; left:0; right:0; z-index:100;
+  background:rgba(18,20,26,.9); border-bottom:1px solid var(--line);
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px)}
+.topbar .inner{max-width:900px; margin:0 auto; padding:0 clamp(10px,2.6vw,26px); height:54px;
+  display:flex; align-items:center; justify-content:space-between; gap:clamp(8px,1.7vw,16px)}
+.topbar .eyebrow{flex:none; white-space:nowrap; color:var(--acc); letter-spacing:.2em;
+  font-size:clamp(10.5px,1.35vw,12.5px); transition:font-size .2s}
+.toc{display:flex; flex-wrap:nowrap; gap:clamp(3px,.7vw,7px); margin:0; min-width:0;
+  overflow-x:auto; scrollbar-width:none; scroll-behavior:smooth}
+.toc::-webkit-scrollbar{display:none}
+.toc a{flex:none; display:inline-flex; align-items:baseline; gap:5px;
+  border:1px solid var(--line); border-radius:20px; padding:3px clamp(5px,1.1vw,11px);
+  font-size:clamp(10.5px,1.32vw,12.3px); color:var(--tx2); text-decoration:none;
+  background:var(--bg2); white-space:nowrap;
+  transition:border-color .15s,color .15s,background .15s,padding .2s,font-size .2s}
+.toc a::before{content:attr(data-n); color:var(--acc); font-weight:700; opacity:.9;
+  font-family:"SFMono-Regular",Consolas,monospace; font-size:.92em}
+.toc a:hover{border-color:rgba(106,169,224,.55); color:var(--blue)}
+.toc a.active{border-color:rgba(217,176,106,.65); color:var(--acc2); background:rgba(217,176,106,.12)}
+.toc a.active::before{opacity:1}
+
+/* 标题与引言 */
+h2.sec{font-size:21px; margin:52px 0 14px; padding-bottom:9px;
+  border-bottom:1px solid var(--line2); scroll-margin-top:74px; color:var(--tx)}
+h2.sec em{font-style:normal; color:var(--acc);
+  font-family:"SFMono-Regular",Consolas,monospace; margin-right:10px}
+h3.sub{font-size:16px; margin:26px 0 10px; color:var(--acc2)}
+.lead-p{color:var(--tx2); background:var(--panel); border-left:3px solid var(--acc);
+  border-radius:0 var(--r) var(--r) 0; padding:15px 18px; margin:18px 0 24px}
+.lead-p b{color:var(--acc2)}
+
+/* 表格 */
+.tbl{width:100%; border-collapse:collapse; margin:16px 0; font-size:13.5px}
+.tbl th{background:var(--panel); color:var(--acc); font-weight:600; font-size:12.5px;
+  padding:9px 11px; text-align:left; border-bottom:1px solid var(--line2);
+  white-space:nowrap; vertical-align:bottom}
+.tbl td{padding:9px 11px; border-bottom:1px solid var(--line); vertical-align:top}
+.tbl tr.hi td{background:rgba(217,176,106,.06)}
+.tbl tr:hover td{background:rgba(255,255,255,.022)}
+.tbl td.mono,.tbl th.mono{font-family:"SFMono-Regular",Consolas,monospace;
+  font-size:12.5px; color:var(--tx2)}
+.ok{color:var(--green); font-weight:600}
+.warn{color:var(--acc2); font-weight:600}
+.bad{color:var(--red); font-weight:600}
+
+/* 双栏面板 */
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px}
+.panel{background:var(--panel); border:1px solid var(--line); border-radius:var(--r); padding:17px 19px}
+.panel h4{font-size:14.5px; font-weight:700; margin:0 0 9px; display:flex; align-items:center; gap:8px; color:var(--tx)}
+.dot{width:9px; height:9px; border-radius:50%; display:inline-block; flex:none}
+.panel p{font-size:13.5px; color:var(--tx2); margin:8px 0 0}
+.panel .f{font-family:"SFMono-Regular",Consolas,monospace; font-size:12.5px;
+  background:#12151c; border:1px solid var(--line); border-radius:8px;
+  padding:12px 14px; margin:10px 0 0; color:var(--acc2); line-height:1.8; word-break:break-word}
+
+/* 提示框 */
+.note,.box{background:var(--panel); border:1px solid var(--line); border-radius:var(--r);
+  padding:16px 20px; margin:18px 0; font-size:13.8px; color:var(--tx2); line-height:1.75}
+.note{border-left:3px solid var(--blue)}
+.box{border-left:3px solid var(--green)}
+.box.warnb{border-left:3px solid var(--red)}
+.note b,.box b{color:var(--acc2)}
+.nh,.bh{display:block; font-weight:700; font-size:14px; color:var(--acc2); margin-bottom:10px}
+.note dl{display:grid; grid-template-columns:auto 1fr; gap:8px 13px; margin:0}
+.note dt{font-weight:600; color:var(--acc2); white-space:nowrap; font-size:12.5px;
+  background:rgba(217,176,106,.13); border-radius:5px; padding:2px 9px; justify-self:start}
+.note dd{margin:0; color:var(--tx2)}
+
+/* 图表 */
+figure{margin:22px 0; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--r); padding:18px 16px 14px}
+figure svg{display:block; width:100%; height:auto}
+figcaption{color:var(--tx3); font-size:12.5px; margin-top:11px; text-align:center;
+  line-height:1.7; padding-top:11px; border-top:1px solid var(--line)}
+figcaption b{color:var(--tx2)}
+
+/* 计算器 */
+.calc{background:var(--panel2); border:1px solid var(--line2); border-radius:var(--r); padding:20px; margin-top:18px}
+.cgrid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px 14px}
+.cgrid label{display:block; font-size:12.5px; color:var(--tx3); margin-bottom:4px}
+.cgrid input{width:100%; background:#12151c; border:1px solid var(--line2); color:var(--tx);
+  border-radius:6px; padding:8px 10px; font-size:14px; font-family:"SFMono-Regular",Consolas,monospace}
+.cgrid input:focus{outline:none; border-color:var(--acc)}
+.outs{display:grid; grid-template-columns:repeat(3,1fr); gap:11px; margin:16px 0}
+.out{background:#12151c; border:1px solid var(--line); border-radius:8px; padding:11px 13px}
+.out .ol{font-size:11.5px; color:var(--tx3)}
+.out .ov{font-size:19px; font-family:"SFMono-Regular",Consolas,monospace;
+  color:var(--acc2); margin-top:2px; line-height:1.3}
+.out .ov small{font-size:11px; color:var(--tx3); font-family:inherit}
+.out.acc{border-color:rgba(217,176,106,.42); background:rgba(217,176,106,.06)}
+.cverdict{background:#12151c; border-left:3px solid var(--acc); border-radius:0 8px 8px 0;
+  padding:13px 16px; font-size:14px; line-height:1.7; color:var(--tx2); margin-top:15px}
+.cverdict.bad{border-left-color:var(--red)}
+.cverdict.warn{border-left-color:var(--purple)}
+.cverdict b{color:var(--acc2)}
+
+/* 标签与页脚 */
+.tags{display:flex; flex-wrap:wrap; gap:8px; margin:18px 0}
+.tags a{background:var(--panel); border:1px solid var(--line); color:var(--tx2);
+  padding:6px 14px; border-radius:8px; font-size:13px; text-decoration:none}
+.tags a:hover{border-color:var(--acc); color:var(--acc2)}
+footer{margin-top:56px; padding-top:20px; border-top:1px solid var(--line);
+  color:var(--tx3); font-size:12.5px; line-height:1.9}
+
+@media(max-width:900px){
+  .topbar .eyebrow{letter-spacing:.12em}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .grid2{grid-template-columns:1fr}
+  .cgrid{grid-template-columns:repeat(2,1fr)}
+  .outs{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:560px){
+  .hero h1{font-size:25px}
+  .hero .lead{font-size:13.6px; line-height:1.85}
+  .stats,.cgrid,.outs{grid-template-columns:1fr}
+  .wrap{padding:0 14px 48px}
+  .wrap.hero{padding-bottom:10px}
+}
+
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="inner">
+    <div class="eyebrow">JBRWG · </div>
+    <div class="toc" id="toc">
+      <a href="#dual" data-n="1">减伤双轨</a>
+      <a href="#cap" data-n="2">免伤天花板</a>
+      <a href="#curve" data-n="3">免伤率函数</a>
+      <a href="#sem" data-n="4">DEF 存疑</a>
+      <a href="#rand" data-n="5">伤害随机性</a>
+      <a href="#quad" data-n="6">四款防御</a>
+      <a href="#calc" data-n="7">计算器</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap hero">
+  <span class="tag">姜饼人王国 · 战斗数值</span>
+  <h1>减伤有<span>两条轨</span>，<br>天花板是 90%</h1>
+  <p class="lead">
+    <b>减伤被拆成两条独立的轨</b>：
+    伤害减免 DR 走乘法、卡死在 90%；防御 DEF 另走一轨。
+    本作自己的实测战斗表（25 行逐回合记录）证明：
+    <b>DEF 不是社区口径里说的「减法型固定抵扣」，而是先转成减伤率再相乘</b>。
+    本页用误差传播把「防御力→免伤率」这条函数闭合，
+    并给出判别力结论：丢掉等级项会让 15/25 个实测样本超出观测精度。
+  </p>
+  <div class="stats">
+    <div class="stat"><b>318</b><span>本批新增复核点<br>FAIL 0</span></div>
+    <div class="stat"><b>25</b><span>行逐回合实测样本<br>等级 7–45</span></div>
+    <div class="stat"><b>0/25</b><span>超出 ±5% 观测带<br>（含等级项模型）</span></div>
+    <div class="stat"><b>90%</b><span>伤害减免硬上限<br>v6.3 起</span></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ========================================================= 减伤双轨 -->
+<h2 class="sec" id="dual"><em>1</em>减伤双轨：公式层</h2>
+
+<p class="lead-p">
+  姜饼人王国的属性分三层：<b>基础</b>（详情页可见：生命 / 攻击 / 防御 / 暴击率 / 冷却）、
+  <b>进阶</b>（配料页可见：攻速 / 伤害减免 / 暴击抵抗 / 减益抵抗 / 增益增幅）、
+  <b>隐藏</b>（界面不显示：移速 / 暴伤 / 重量 / 减伤穿透 / 属性克制）。
+  分层的意义是：<b>越强的属性越难被发现</b>，而伤害减免这一条 —— 它同时是进阶属性、
+  社区公认的「最高价值副词条」，也是本作全部战斗公式的枢纽。
+</p>
+
+<div class="grid2">
+  <div class="panel">
+    <h4><span class="dot" style="background:var(--indigo)"></span>轨一 · 伤害减免 DR（乘法）</h4>
+    <p>按百分比直接削减受到的伤害，是社区共识的第一优先副词条。有硬上限。</p>
+    <div class="f">有效免伤 = MIN( DR × (1 − 穿透) , Cap )<br>
+Cap = 0.90（饼干） / 0.95（非 PVP 敌人）</div>
+    <p>穿透按<b>乘法</b>作用于对方的减伤值，不是加法减免 —— 这是本作 PVP 的核心对策位。</p>
+  </div>
+  <div class="panel">
+    <h4><span class="dot" style="background:var(--amber)"></span>轨二 · 防御 DEF（另走一轨）</h4>
+    <p>官方口径写的是「按固定值抵扣伤害（减法型）」。但本作 25 行实测数据不支持这个说法。</p>
+    <div class="f">实测：免伤率 Q = DEF ÷ ( DEF + 6371 + 40 × 等级 )</div>
+    <p>DEF 不是直接抵扣，而是先<b>转成一个百分比免伤率</b>，再与 DR 相乘。两轨相乘，不是相加。</p>
+  </div>
+</div>
+
+<h3 class="sub">公式层：7 条派生公式与它们的作用域</h3>
+
+<table class="tbl">
+  <thead><tr><th style="width:150px">公式</th><th>表达式</th><th style="width:150px">作用域</th><th style="width:80px">置信度</th></tr></thead>
+  <tbody>
+    <tr><td><b>有效免伤</b></td><td class="mono">MIN( DR × (1 − Bypass) , Cap )</td><td>全部战斗结算</td><td class="ok">已验证</td></tr>
+    <tr><td><b>有效生命 EHP</b></td><td class="mono">HP ÷ (1 − 有效免伤)</td><td>坦度评估（跨角色可比）</td><td class="warn">推导</td></tr>
+    <tr><td><b>暴击期望系数</b></td><td class="mono">1 + CRIT% × (暴击倍率 − 1)</td><td>输出评估</td><td class="warn">推导</td></tr>
+    <tr><td><b>期望伤害</b></td><td class="mono">ATK × 技能系数 × 暴击期望系数 × (1 − 有效免伤)</td><td>伤害对比</td><td class="warn">推导</td></tr>
+    <tr><td><b>冷却实际间隔</b></td><td class="mono">基础 CD × (1 − MIN(冷却减免, 0.60))</td><td>技能循环</td><td class="ok">已验证</td></tr>
+    <tr><td><b>攻速实际倍率</b></td><td class="mono">基础 × (1 + MIN(攻速 buff, 5.00))，减速下限 −70%</td><td>出手频率</td><td class="ok">已验证</td></tr>
+    <tr><td><b>穿透带来的减伤下降</b></td><td class="mono">DR × Bypass</td><td>PVP 配装</td><td class="ok">已验证</td></tr>
+  </tbody>
+</table>
+
+<div class="box">
+  <span class="bh">设计意图：把「堆到上限」变成一个明确的终点</span>
+  冷却减免 60%、攻速 buff  500%、暴击率 100%、暴击抵抗 85%、减益抵抗 75%、
+  伤害减免 90%（非 PVP 敌人 95%）。<b>每一条养成线都有一个明确的天花板</b>，
+  这与作品集里《放置三国》那种「防御值越高减伤越高、永远没顶点」的结构形成鲜明对照。
+</div>
+
+<!-- ========================================================= 免伤天花板 -->
+<h2 class="sec" id="cap"><em>2</em>免伤天花板</h2>
+
+<p class="lead-p">
+  数值天花板被改过多次，其中改动最狠的一次是 v6.3（2025-04-09）：
+  伤害减免上限从 85% 到 90%。这个 5 个百分点不是小修 —— 它把坦度的理论上限
+  <b>直接抬高了 50%</b>。
+</p>
+
+<figure id="fig3">
+<svg viewBox="0 0 680 268" width="100%" role="img" aria-label="图 3 · 天花板抬升 5 个百分点，EHP 上限从 6.67× 抬到 10×">
+<text x="58.00" y="15.00" font-size="12" text-anchor="start" fill="#e8eaef" font-weight="700" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">天花板抬升 5 个百分点，EHP 上限从 6.67× 抬到 10×</text>
+<text x="58.00" y="30.00" font-size="10" text-anchor="start" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">EHP = HP ÷ (1 − 有效免伤)</text>
+<line class="ax" x1="58.00" y1="214.00" x2="656.00" y2="214.00" stroke="#2e3442" stroke-width="1"/>
+<text x="51.00" y="217.50" font-size="9" text-anchor="end" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">1×</text>
+<line class="ax" x1="58.00" y1="180.32" x2="656.00" y2="180.32" stroke="#2e3442" stroke-width="1"/>
+<text x="51.00" y="183.82" font-size="9" text-anchor="end" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">3×</text>
+<line class="ax" x1="58.00" y1="146.63" x2="656.00" y2="146.63" stroke="#2e3442" stroke-width="1"/>
+<text x="51.00" y="150.13" font-size="9" text-anchor="end" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">5×</text>
+<line class="ax" x1="58.00" y1="112.95" x2="656.00" y2="112.95" stroke="#2e3442" stroke-width="1"/>
+<text x="51.00" y="116.45" font-size="9" text-anchor="end" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">7×</text>
+<line class="ax" x1="58.00" y1="79.26" x2="656.00" y2="79.26" stroke="#2e3442" stroke-width="1"/>
+<text x="51.00" y="82.76" font-size="9" text-anchor="end" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">9×</text>
+<line class="ax" x1="58.00" y1="214.00" x2="656.00" y2="214.00" stroke="#3b4354" stroke-width="1.2"/>
+<line class="ax" x1="58.00" y1="54.00" x2="58.00" y2="214.00" stroke="#3b4354" stroke-width="1.2"/>
+<text x="357.00" y="252.00" font-size="10" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">伤害减免 DR</text>
+<text x="13" y="134.00" font-size="10" text-anchor="middle" fill="#a8b0c0" transform="rotate(-90 13 134.00)" font-family="-apple-system,sans-serif">EHP ÷ HP</text>
+<line class="ax" x1="58.00" y1="214.00" x2="58.00" y2="218.00" stroke="#3b4354" stroke-width="1"/>
+<text x="58.00" y="230.00" font-size="9" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">0%</text>
+<line class="ax" x1="120.95" y1="214.00" x2="120.95" y2="218.00" stroke="#3b4354" stroke-width="1"/>
+<text x="120.95" y="230.00" font-size="9" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">10%</text>
+<line class="ax" x1="183.89" y1="214.00" x2="183.89" y2="218.00" stroke="#3b4354" stroke-width="1"/>
+<text x="183.89" y="230.00" font-size="9" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">20%</text>
+<line class="ax" x1="246.84" y1="214.00" x2="246.84" y2="218.00" stroke="#3b4354" stroke-width="1"/>
+<text x="246.84" y="230.00" font-size="9" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">30%</text>
+<line class="ax" x1="309.79" y1="214.00" x2="309.79" y2="218.00" stroke="#3b4354" stroke-width="1"/>
+<text x="309.79" y="230.00" font-size="9" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">40%</text>
+<line class="ax" x1="372.74" y1="214.00" x2="372.74" y2="218.00" stroke="#3b4354" stroke-width="1"/>
+<text x="372.74" y="230.00" font-size="9" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">50%</text>
+<line class="ax" x1="435.68" y1="214.00" x2="435.68" y2="218.00" stroke="#3b4354" stroke-width="1"/>
+<text x="435.68" y="230.00" font-size="9" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">60%</text>
+<line class="ax" x1="498.63" y1="214.00" x2="498.63" y2="218.00" stroke="#3b4354" stroke-width="1"/>
+<text x="498.63" y="230.00" font-size="9" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">70%</text>
+<line class="ax" x1="561.58" y1="214.00" x2="561.58" y2="218.00" stroke="#3b4354" stroke-width="1"/>
+<text x="561.58" y="230.00" font-size="9" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">80%</text>
+<line class="ax" x1="624.53" y1="214.00" x2="624.53" y2="218.00" stroke="#3b4354" stroke-width="1"/>
+<text x="624.53" y="230.00" font-size="9" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">90%</text>
+<polyline points="58.00,214.00 64.29,213.83 70.59,213.66 76.88,213.48 83.18,213.30 89.47,213.11 95.77,212.92 102.06,212.73 108.36,212.54 114.65,212.33 120.95,212.13 127.24,211.92 133.54,211.70 139.83,211.48 146.13,211.26 152.42,211.03 158.72,210.79 165.01,210.55 171.31,210.30 177.60,210.05 183.89,209.79 190.19,209.52 196.48,209.25 202.78,208.97 209.07,208.68 215.37,208.39 221.66,208.08 227.96,207.77 234.25,207.45 240.55,207.12 246.84,206.78 253.14,206.43 259.43,206.07 265.73,205.70 272.02,205.32 278.32,204.93 284.61,204.53 290.91,204.11 297.20,203.68 303.49,203.23 309.79,202.77 316.08,202.30 322.38,201.80 328.67,201.29 334.97,200.77 341.26,200.22 347.56,199.65 353.85,199.06 360.15,198.45 366.44,197.82 372.74,197.16 379.03,196.47 385.33,195.75 391.62,195.01 397.92,194.23 404.21,193.42 410.51,192.56 416.80,191.67 423.09,190.74 429.39,189.76 435.68,188.74 441.98,187.66 448.27,186.52 454.57,185.32 460.86,184.06 467.16,182.72 473.45,181.31 479.75,179.81 486.04,178.21 492.34,176.51 498.63,174.70 504.93,172.77 511.22,170.69 517.52,168.46 523.81,166.06 530.11,163.47 536.40,160.67 542.69,157.62 548.99,154.29 555.28,150.64 561.58,146.63 567.87,142.20 574.17,137.27 580.46,131.77 586.76,125.58 593.05,118.56 599.35,118.56 605.64,118.56 611.94,118.56 618.23,118.56 624.53,118.56 630.82,118.56 637.12,118.56 643.41,118.56 649.71,118.56 656.00,118.56" fill="none" stroke="#9aa4b8" stroke-width="2.2" stroke-linejoin="round" stroke-dasharray="7 4"/>
+<line x1="593.05" y1="118.56" x2="656.00" y2="118.56" stroke="#9aa4b8" stroke-width="1.2" stroke-dasharray="4 3"/>
+<polyline points="58.00,214.00 64.29,213.83 70.59,213.66 76.88,213.48 83.18,213.30 89.47,213.11 95.77,212.92 102.06,212.73 108.36,212.54 114.65,212.33 120.95,212.13 127.24,211.92 133.54,211.70 139.83,211.48 146.13,211.26 152.42,211.03 158.72,210.79 165.01,210.55 171.31,210.30 177.60,210.05 183.89,209.79 190.19,209.52 196.48,209.25 202.78,208.97 209.07,208.68 215.37,208.39 221.66,208.08 227.96,207.77 234.25,207.45 240.55,207.12 246.84,206.78 253.14,206.43 259.43,206.07 265.73,205.70 272.02,205.32 278.32,204.93 284.61,204.53 290.91,204.11 297.20,203.68 303.49,203.23 309.79,202.77 316.08,202.30 322.38,201.80 328.67,201.29 334.97,200.77 341.26,200.22 347.56,199.65 353.85,199.06 360.15,198.45 366.44,197.82 372.74,197.16 379.03,196.47 385.33,195.75 391.62,195.01 397.92,194.23 404.21,193.42 410.51,192.56 416.80,191.67 423.09,190.74 429.39,189.76 435.68,188.74 441.98,187.66 448.27,186.52 454.57,185.32 460.86,184.06 467.16,182.72 473.45,181.31 479.75,179.81 486.04,178.21 492.34,176.51 498.63,174.70 504.93,172.77 511.22,170.69 517.52,168.46 523.81,166.06 530.11,163.47 536.40,160.67 542.69,157.62 548.99,154.29 555.28,150.64 561.58,146.63 567.87,142.20 574.17,137.27 580.46,131.77 586.76,125.58 593.05,118.56 599.35,110.54 605.64,101.29 611.94,90.49 618.23,77.73 624.53,62.42 630.82,62.42 637.12,62.42 643.41,62.42 649.71,62.42 656.00,62.42" fill="none" stroke="#d9b06a" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="599.05" y="140.56" font-size="9" text-anchor="start" fill="#9aa4b8" font-weight="700" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">85% 后完全无效</text>
+<text x="618.53" y="50.42" font-size="9" text-anchor="end" fill="#d9b06a" font-weight="700" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">90% 上限：EHP 10×</text>
+<text x="319.79" y="190.77" font-size="10" text-anchor="start" fill="#9aa4b8" font-weight="700" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">cap 85%</text>
+<text x="488.63" y="154.70" font-size="10" text-anchor="start" fill="#d9b06a" font-weight="700" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">cap 90%</text>
+</svg>
+<figcaption>
+  EHP 随伤害减免 DR 的变化。DR 每多 1 个百分点，EHP 就多涨一截；
+  但一旦越过 cap，增长<b>立刻归零</b>。cap 85% 的玩家，EHP 停在 6.67× 就再也不动；
+  cap 90% 则把终点推到 10× —— 相对旧上限是 <b>+50%</b> 的坦度。
+</figcaption>
+</figure>
+
+<div class="note">
+  <span class="nh">为什么这次改动被标成「已验证」却值得单独记一笔</span>
+  <dl>
+    <dt>它是</dt><dd>一次数值改动 + 一次商业化动作 —— 存量 85% 满配玩家的边际收益从
+      「投入无效」变成「5pp提升空间」，把已封顶的养成线重新变成可售卖内容。</dd>
+    <dt>它不改</dt><dd>任何一条公式的结构，只改一个参数区的常数（Cap 0.85 → 0.90），
+      所以页面上所有派生公式自动跟随，无需重算。</dd>
+  </dl>
+</div>
+
+<!-- ========================================================= 免伤率函数 -->
+<h2 class="sec" id="curve"><em>3</em>免伤率函数：一条悬案如何闭合</h2>
+
+<p class="lead-p">
+  此前的<b>防御减伤与血量反推</b>留下了一个明确的缺口：
+  从 25 行实测数据反解出的常数 <code>c</code> <b>不是一个常数</b>，
+  也找不到与等级或攻击的单调关系 —— 于是初版给了一阶近似 <code>Q ≈ D/(D + 7000)</code>，
+  并列进「缺口与补全计划」。
+</p>
+
+<h3 class="sub">3.1 缺口长什么样</h3>
+
+<p>
+  战斗表的免伤率公式：<b>实际伤害 = 技能系数 × 攻方攻击 × (1 − 伤害抵抗) × (1 − 免伤率)</b>。
+  伤害要过两道闸：先被伤害抵抗按比例削，再被防御带来的免伤率削。
+  <code>反解</code>得到 25 行的 c 值：
+</p>
+
+  <table class="tbl">
+  <thead><tr><th>守方等级</th><th>守方防御 J</th><th>样本数</th><th>c 实测均值</th><th>c 区间</th><th style="width:230px">当时的判断</th></tr></thead>
+  <tbody>
+    <tr><td>7</td><td class="mono">1,177 – 1,392</td><td>4</td><td class="mono">6,215</td><td class="mono">5,748 – 6,577</td><td>与其他组不同步</td></tr>
+    <tr><td>8</td><td class="mono">1,420</td><td>1</td><td class="mono">5,868</td><td class="mono">—</td><td>单点，无法判别</td></tr>
+    <tr><td>10</td><td class="mono">4,431 – 4,431</td><td>2</td><td class="mono">7,315</td><td class="mono">7,300 – 7,330</td><td><span class="bad">等级更低，c 反而更高</span></td></tr>
+    <tr><td>17</td><td class="mono">5,719 – 6,290</td><td>14</td><td class="mono">7,216</td><td class="mono">6,453 – 7,690</td><td>组内离散 5–6%</td></tr>
+    <tr class="hi"><td>45</td><td class="mono">12,806 – 15,078</td><td>4</td><td class="mono">8,137</td><td class="mono">8,023 – 8,311</td><td>高防组，c 明显更高</td></tr>
+  </tbody>
+</table>
+<p style="font-size:13px;color:var(--muted);margin-top:8px">
+  样本数合计 <b>25</b> 行，与战斗表的有效实测行数一致。<b>注意样本数不等于面板数</b> ——
+  同一个 (防御, 等级) 面板可能在多行里重复出现（详见 3.2 节后的说明）。
+</p>
+
+<div class="note">
+  <span class="nh">缺口诊断：不是模型错，是噪声被读错了方向</span>
+  <dl>
+    <dt>当时的结论</dt><dd>「组内离散 5–6%，正好等于伤害浮动幅度 ±5%，说明 Q 的波动是测量噪声；
+      但 c 不是一个常数，也找不到与等级或攻击的单调关系。」</dd>
+    <dt>问题在哪</dt><dd>04 章把「组内离散小」当成了「噪声小」，然后拿 c 的<b>点估计</b>去比大小。
+      但 c 是 Q 的<b>非线性变换</b>的产物：<code>c = J(1−Q)/Q</code>，
+      它的相对误差被放大了 <code>1/Q</code> 倍 —— Q 越小，放大越狠。</dd>
+    <dt>正确做法</dt><dd>先做误差传播，再比较；而且比较要放在<b>伤害域</b>，
+      因为那里的噪声是恒定的 ±5%，不会被变换放大。</dd>
+  </dl>
+</div>
+
+<h3 class="sub">3.2 误差传播：c 的真实噪声有多大</h3>
+
+<p>
+  观测伤害 O 带 ±5% 的浮动（战斗表 P 列用 <code>INT(基准)×0.95</code> 与 <code>×1.05</code> 做上下界校验）。
+  于是免伤率 Q 的绝对噪声是 <code>σ_Q = 5% × (1 − Q)</code>，再传到 c：
+</p>
+
+<div class="calc" style="background:#1e222c;border-color:var(--line)">
+  <div class="f" style="margin-top:0">
+    σ_Q = 5% × (1 − Q)<br>
+    σ_c = |∂c/∂Q| × σ_Q = ( DEF ÷ Q² ) × σ_Q<br>
+    σ_c ÷ c ≈ 5% ÷ Q
+  </div>
+</div>
+
+<p>
+  这解释了三件当时看起来矛盾的事：
+  低免伤组（Q ≈ 15–20%）的 c 噪声高达 <b>25%–33%</b>；
+  高免伤组（Q ≈ 61–65%）的 c 噪声只有 <b>7.7%–8.2%</b>；
+  而 04 章观测到的「组内离散 5–6%」其实<b>远小于真实噪声</b> —— 那几组只是恰好集中，
+  并不是噪声小。
+</p>
+
+<div class="note">
+  <span class="nh">同一个面板，为什么会测出好几个免伤率：</span>
+  <dl>
+    <dt>现象</dt><dd>lv17 组的守方面板完全相同（防御 5,719、等级 17），
+      但战斗表里对应 <b>6 行</b>，免伤率分别是 46.36% / 43.63% / 46.11% /
+      43.92% / 43.81% / 42.65% —— <b>极差 3.71 个百分点</b>。</dd>
+    <dt>原因</dt><dd>这 6 行的守方一样，但<b>攻方不同</b>（技能系数 0.09 与 0.157 交替出现，
+      观测伤害是 210 / 385 / 211 / 383 / 220 / 391.67）。
+      防御和等级只决定免伤率的<b>中枢</b>，实际观测值还要叠加伤害浮动，
+      所以同一面板出现多个免伤率是正常的。</dd>
+    <dt>方法学结论</dt><dd>按 (防御, 等级) 去重会<b>静默丢掉 5 行</b>，
+      只留第一行就等于拿<b>点估计</b>代表整组 —— 不严谨。
+      本页的 25 行样本<b>逐行保留</b>，把 25 个点全部画出来：
+      与模型值的最大偏差 <b>2.21 个百分点</b>，0 个超出 ±5pp。
+      （以组内均值看，lv17 这 6 行的均值是 44.41%，模型值 44.78% —— 差 0.37pp。）</dd>
+  </dl>
+</div>
+
+<h3 class="sub">3.3 判据：把比较搬回伤害域</h3>
+
+<p>
+  有了噪声界，判据就变得干净：模型给出的伤害预测与实测伤害的相对残差，
+  <b>超过 ±5% 即超出观测精度</b>。这条判据不依赖任何分布假设，是硬边界。
+</p>
+
+<figure id="fig2">
+<svg viewBox="0 0 680 268" width="100%" role="img" aria-label="图 2 · 伤害域残差：只有含等级项的模型全部落在 ±5% 观测带内">
+<text x="58.00" y="15.00" font-size="12" text-anchor="start" fill="#e8eaef" font-weight="700" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">伤害域残差：只有含等级项的模型全部落在 ±5% 观测带内</text>
+<text x="58.00" y="30.00" font-size="10" text-anchor="start" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">残差 =（模型预测 − 实测）÷ 实测　｜　带外即超出观测精度</text>
+<line class="ax" x1="58.00" y1="195.54" x2="656.00" y2="195.54" stroke="#2e3442" stroke-width="1"/>
+<text x="51.00" y="199.04" font-size="9" text-anchor="end" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">-15%</text>
+<line class="ax" x1="58.00" y1="164.77" x2="656.00" y2="164.77" stroke="#2e3442" stroke-width="1"/>
+<text x="51.00" y="168.27" font-size="9" text-anchor="end" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">-10%</text>
+<line class="ax" x1="58.00" y1="134.00" x2="656.00" y2="134.00" stroke="#2e3442" stroke-width="1"/>
+<text x="51.00" y="137.50" font-size="9" text-anchor="end" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">-5%</text>
+<line class="ax" x1="58.00" y1="103.23" x2="656.00" y2="103.23" stroke="#2e3442" stroke-width="1"/>
+<text x="51.00" y="106.73" font-size="9" text-anchor="end" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">+0%</text>
+<line class="ax" x1="58.00" y1="72.46" x2="656.00" y2="72.46" stroke="#2e3442" stroke-width="1"/>
+<text x="51.00" y="75.96" font-size="9" text-anchor="end" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">+5%</text>
+<line class="ax" x1="58.00" y1="214.00" x2="656.00" y2="214.00" stroke="#3b4354" stroke-width="1.2"/>
+<line class="ax" x1="58.00" y1="54.00" x2="58.00" y2="214.00" stroke="#3b4354" stroke-width="1.2"/>
+<text x="357.00" y="252.00" font-size="10" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">实测样本（按守方等级分组）</text>
+<text x="13" y="134.00" font-size="10" text-anchor="middle" fill="#a8b0c0" transform="rotate(-90 13 134.00)" font-family="-apple-system,sans-serif">相对残差</text>
+<rect x="58.00" y="72.46" width="598.00" height="61.54" fill="#6fc08a" opacity="0.14"/>
+<line x1="58.00" y1="72.46" x2="656.00" y2="72.46" stroke="#6fc08a" stroke-width="1.3" stroke-dasharray="6 4"/>
+<line x1="58.00" y1="134.00" x2="656.00" y2="134.00" stroke="#6fc08a" stroke-width="1.3" stroke-dasharray="6 4"/>
+<text x="653.00" y="66.46" font-size="9" text-anchor="end" fill="#6fc08a" font-weight="700" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">±5% 观测浮动带</text>
+<line x1="58.00" y1="103.23" x2="656.00" y2="103.23" stroke="#9aa4b8" stroke-width="1.2"/>
+<circle cx="92.58" cy="96.77" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="113.73" cy="105.88" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="134.88" cy="93.63" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="156.04" cy="92.28" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="177.19" cy="106.25" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="198.35" cy="200.71" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="219.50" cy="193.82" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="240.65" cy="190.62" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="261.81" cy="193.08" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="282.96" cy="136.28" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="304.12" cy="135.35" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="325.27" cy="114.06" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="346.42" cy="143.35" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="367.58" cy="116.89" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="388.73" cy="140.34" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="409.88" cy="141.51" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="431.04" cy="153.14" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="452.19" cy="153.14" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="473.35" cy="141.08" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="494.50" cy="132.65" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="515.65" cy="107.11" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="536.81" cy="153.14" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="557.96" cy="150.00" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="579.12" cy="123.54" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="600.27" cy="154.49" r="3.4" fill="#e07a70" opacity="0.88"/>
+<circle cx="92.58" cy="86.80" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="113.73" cy="95.85" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="134.88" cy="83.23" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="156.04" cy="82.86" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="177.19" cy="97.51" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="198.35" cy="167.05" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="219.50" cy="160.28" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="240.65" cy="155.72" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="261.81" cy="157.63" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="282.96" cy="113.94" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="304.12" cy="113.02" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="325.27" cy="87.23" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="346.42" cy="117.82" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="367.58" cy="90.18" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="388.73" cy="114.68" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="409.88" cy="115.91" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="431.04" cy="128.03" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="452.19" cy="126.80" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="473.35" cy="114.12" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="494.50" cy="105.26" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="515.65" cy="78.55" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="536.81" cy="126.68" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="557.96" cy="123.42" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="579.12" cy="95.72" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="600.27" cy="128.09" r="3.4" fill="#6aa9e0" opacity="0.88"/>
+<circle cx="92.58" cy="92.09" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="113.73" cy="101.20" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="134.88" cy="88.15" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="156.04" cy="87.91" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="177.19" cy="102.18" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="198.35" cy="109.69" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="219.50" cy="103.29" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="240.65" cy="96.03" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="261.81" cy="96.77" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="282.96" cy="121.82" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="304.12" cy="120.89" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="325.27" cy="85.14" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="346.42" cy="115.85" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="367.58" cy="88.15" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="388.73" cy="112.71" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="409.88" cy="113.94" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="431.04" cy="126.12" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="452.19" cy="124.77" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="473.35" cy="112.09" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="494.50" cy="103.11" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="515.65" cy="76.34" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="536.81" cy="124.65" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="557.96" cy="121.38" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="579.12" cy="93.57" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<circle cx="600.27" cy="126.06" r="3.4" fill="#d9b06a" opacity="0.88"/>
+<line class="ax" x1="82.00" y1="214.00" x2="82.00" y2="219.00" stroke="#3b4354" stroke-width="1"/>
+<text x="134.88" y="232.00" font-size="9" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">lv7</text>
+<line class="ax" x1="187.77" y1="214.00" x2="187.77" y2="219.00" stroke="#3b4354" stroke-width="1"/>
+<text x="198.35" y="232.00" font-size="9" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">lv8</text>
+<line class="ax" x1="208.92" y1="214.00" x2="208.92" y2="219.00" stroke="#3b4354" stroke-width="1"/>
+<text x="230.08" y="232.00" font-size="9" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">lv10</text>
+<line class="ax" x1="251.23" y1="214.00" x2="251.23" y2="219.00" stroke="#3b4354" stroke-width="1"/>
+<text x="399.31" y="232.00" font-size="9" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">lv17</text>
+<line class="ax" x1="547.38" y1="214.00" x2="547.38" y2="219.00" stroke="#3b4354" stroke-width="1"/>
+<text x="589.69" y="232.00" font-size="9" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">lv45</text>
+<circle cx="68.00" cy="44.00" r="3.4" fill="#d9b06a"/>
+<text x="76.00" y="47.50" font-size="9" text-anchor="start" fill="#e8eaef" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">模型 c=6371+40·lv</text>
+<circle cx="172.93" cy="44.00" r="3.4" fill="#6aa9e0"/>
+<text x="180.93" y="47.50" font-size="9" text-anchor="start" fill="#e8eaef" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">常数 c=7000</text>
+<circle cx="246.50" cy="44.00" r="3.4" fill="#e07a70"/>
+<text x="254.50" y="47.50" font-size="9" text-anchor="start" fill="#e8eaef" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">纯常数 c=6371</text>
+<text x="652.00" y="208.00" font-size="9" text-anchor="end" fill="#e07a70" font-weight="700" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">纯常数与 c=7000 在守方 lv45 组整组越界</text>
+</svg>
+<figcaption>
+  25 个实测样本在三个候选模型下的伤害域相对残差。绿色带为 ±5% 观测浮动带，
+  带外即模型与实测不可调和。横轴按守方等级分组。
+  可见<b>纯常数模型在守方 lv45 组整组越界</b>（最远 −15.8%），
+  <b>常数 7000 也在 lv45 组整组越界</b>；只有含等级项的模型全部落在带内。
+</figcaption>
+</figure>
+
+<table class="tbl">
+  <thead><tr><th>候选模型</th><th class="mono">c(lv)</th><th>伤害域 RMS</th><th>最大残差</th><th>超出 ±5% 带</th><th style="width:210px">判定</th></tr></thead>
+  <tbody>
+    <tr class="hi"><td><b>模型演算表口径</b></td><td class="mono">6371 + 40 × lv</td><td class="mono">2.409%</td><td class="mono">4.366%</td><td class="ok">0 / 25</td><td><span class="ok">与实测完全一致</span></td></tr>
+    <tr><td>实测数据独立拟合</td><td class="mono">6335.9 + 43.3 × lv</td><td class="mono">2.425%</td><td class="mono">4.512%</td><td class="ok">0 / 25</td><td><span class="ok">与实测完全一致</span></td></tr>
+    <tr><td>当时常数近似</td><td class="mono">7000（常数）</td><td class="mono">4.468%</td><td class="mono">10.373%</td><td class="bad">4 / 25</td><td><span class="bad">高防端不成立</span></td></tr>
+    <tr><td>最优常数</td><td class="mono">7446（常数）</td><td class="mono">3.568%</td><td class="mono">7.043%</td><td class="bad">4 / 25</td><td><span class="bad">高防端不成立</span></td></tr>
+    <tr><td>丢掉等级项</td><td class="mono">6371（常数）</td><td class="mono">7.661%</td><td class="mono">15.837%</td><td class="bad">15 / 25</td><td><span class="bad">大范围失效</span></td></tr>
+    <tr><td>无防御减伤</td><td class="mono">Q = 0</td><td class="mono">95.060%</td><td class="mono">187.507%</td><td class="bad">25 / 25</td><td><span class="bad">完全不成立</span></td></tr>
+  </tbody>
+</table>
+
+<h3 class="sub">3.4 两个来源独立命中同一组参数</h3>
+
+<p>
+  这里的 <code>c = 6371 + 40 × lv</code> 来自<b>作者自建的横向对照模型</b>《模型演算.xlsm》「伤害」页 U 列 ——
+  那是为姜饼人选的一列公式，与本作实测数据毫无关系。
+  而 <code>6335.9 + 43.3 × lv</code> 是用<b> 25 行实测战斗表</b>独立做最小二乘拟合出来的。
+</p>
+
+<table class="tbl">
+  <thead><tr><th>参数</th><th>模型演算表（作者自建）</th><th>本作实测独立拟合</th><th>相对偏差</th><th style="width:200px">来源独立性</th></tr></thead>
+  <tbody>
+    <tr class="hi"><td>常数项 a</td><td class="mono">6371</td><td class="mono">6335.9</td><td class="ok">+0.55%</td><td>完全独立</td></tr>
+    <tr class="hi"><td>等级系数 b</td><td class="mono">40</td><td class="mono">43.3</td><td class="ok">+8.25%</td><td>完全独立</td></tr>
+  </tbody>
+</table>
+
+<div class="box">
+  <span class="bh">这条命中的含金量：两个来源都是从零开始写的</span>
+  两条路径不共享任何中间量，参数却吻合到 0.55% / 8.25%。这比「同一个公式算两遍」强得多 ——
+  它说明 <code>6371 + 40 × lv</code> 很可能就是本作真实的减伤函数。
+</div>
+
+<h3 class="sub">3.5 判别力到底有多大（以及它缺什么）</h3>
+
+<table class="tbl">
+  <thead><tr><th style="width:210px">问题</th><th>结论</th><th style="width:240px">还缺什么才能进一步判别</th></tr></thead>
+  <tbody>
+    <tr><td>有没有等级项？</td><td><span class="ok">能判别</span> —— 丢掉后 15/25 越界</td><td>无需补数据</td></tr>
+    <tr><td>常数模型行不行？</td><td><span class="bad">不能</span> —— 4/25 越界，且全在 lv45</td><td>无需补数据</td></tr>
+    <tr><td>40 这个系数准不准？</td><td><span class="warn">判不了</span> —— 独立拟合给 43.3，
+      但残差都在 ±5% 带内，两者都成立</td><td>需要<b>等级跨度更大</b>的样本（实测只覆盖 lv7–45，
+      而 40 与 43.3 的差别要在 lv100 以上才放大到可判别）</td></tr>
+    <tr><td>6371 这个常数准不准？</td><td><span class="warn">判不了</span> —— 同上</td><td>同上；或做「只动等级、其余锁死」的对照战</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <span class="nh">总结</span>
+  <dl>
+    <dt>已闭合的</dt><dd><b>函数形态</b>：免伤率 = DEF ÷ (DEF + a + b × 等级)，
+      即「DEF 转成减伤率后相乘，且分母含等级项」。这一条被 25 行实测数据判定。</dd>
+    <dt>未闭合的</dt><dd><b>两个常数的精确值</b>。6371 与 40 是目前能给出的最佳估计，
+      不是被证实的真值。要进一步收紧，需要覆盖 lv100+ 的对照样本，
+      或一组「只动等级、其余锁死」的对照战。</dd>
+    <dt>因此</dt><dd>当时那条「c 不是常数、找不到单调关系」的缺口，
+      性质上是<b>观测精度不足导致的误读</b>，不是模型缺项。
+      正确的表述是：<b>c 确实是随等级变化的常数族，
+      但变化幅度被 25 行样本的噪声掩盖了</b>。</dd>
+  </dl>
+</div>
+
+<h3 class="sub">3.6 防御的边际效应：涨 12.8 倍，只换 4.3 倍免伤</h3>
+
+<p>
+  公式闭合之后，DEF 的边际效应可以直接算了。25 行实测样本里，防御力从
+  <b>1,177</b>（lv7）到 <b>15,078</b>（lv45），跨度 <b>12.81 倍</b>；
+  而公式给出的减伤尺度 c 只从 6,651 涨到 8,171，<b>仅 1.23 倍</b>。
+  落到免伤率上：<b>15.04% → 64.85%，只涨了 4.31 倍</b>。
+</p>
+
+<p>
+  两条结论同时成立，它们不矛盾：
+</p>
+
+<div class="grid2">
+  <div class="panel">
+    <h4><span class="dot" style="background:var(--indigo)"></span>对同等级：饱和</h4>
+    <p>同一等级内，DEF 翻倍带来的免伤增量越来越小 —— 这是一条典型的
+       <code>D/(D+c)</code> 饱和曲线，<b>永远逼近上限但永不到达</b>。</p>
+    <div class="f">lv45：DEF 12,806 → 61.05%<br>
+lv45：DEF 15,078 → 64.85%<br>
+（防御 +17.7%，免伤 +3.81pp）</div>
+  </div>
+  <div class="panel">
+    <h4><span class="dot" style="background:var(--amber)"></span>对跨等级：被稀释</h4>
+    <p>等级每升一级，分母就多 40。DEF 涨得再快，也有一部分被等级项吃掉 ——
+       高等级角色的防御贡献<b>被系统性稀释</b>。</p>
+    <div class="f">lv7  → c = 6,651<br>
+lv17 → c = 7,051（+6.0%）<br>
+lv45 → c = 8,171（+22.9%）<br>
+（分母每级 +40）</div>
+  </div>
+</div>
+
+<figure id="fig1">
+<svg viewBox="0 0 680 268" width="100%" role="img" aria-label="免伤率随防御力的变化：饱和，且高等级被稀释">
+<text x="58.00" y="15.00" font-size="12" text-anchor="start" fill="#e8eaef" font-weight="700" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">免伤率随防御力的变化：饱和，且高等级被稀释</text>
+<text x="58.00" y="30.00" font-size="10" text-anchor="start" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">Q = DEF ÷ (DEF + 6371 + 40 × 等级)　｜　曲线为模型演算表口径，空心点为 25 个实测样本</text>
+<line class="ax" x1="58.00" y1="214.00" x2="656.00" y2="214.00" stroke="#2e3442" stroke-width="1"/>
+<text x="51.00" y="217.50" font-size="9" text-anchor="end" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">0%</text>
+<line class="ax" x1="58.00" y1="176.35" x2="656.00" y2="176.35" stroke="#2e3442" stroke-width="1"/>
+<text x="51.00" y="179.85" font-size="9" text-anchor="end" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">20%</text>
+<line class="ax" x1="58.00" y1="138.71" x2="656.00" y2="138.71" stroke="#2e3442" stroke-width="1"/>
+<text x="51.00" y="142.21" font-size="9" text-anchor="end" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">40%</text>
+<line class="ax" x1="58.00" y1="101.06" x2="656.00" y2="101.06" stroke="#2e3442" stroke-width="1"/>
+<text x="51.00" y="104.56" font-size="9" text-anchor="end" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">60%</text>
+<line class="ax" x1="58.00" y1="63.41" x2="656.00" y2="63.41" stroke="#2e3442" stroke-width="1"/>
+<text x="51.00" y="66.91" font-size="9" text-anchor="end" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">80%</text>
+<line class="ax" x1="58.00" y1="214.00" x2="656.00" y2="214.00" stroke="#3b4354" stroke-width="1.2"/>
+<line class="ax" x1="58.00" y1="54.00" x2="58.00" y2="214.00" stroke="#3b4354" stroke-width="1.2"/>
+<text x="357.00" y="252.00" font-size="10" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">防御力 DEF</text>
+<text x="13" y="134.00" font-size="10" text-anchor="middle" fill="#a8b0c0" transform="rotate(-90 13 134.00)" font-family="-apple-system,sans-serif">免伤率</text>
+<line class="ax" x1="58.00" y1="214.00" x2="58.00" y2="218.00" stroke="#3b4354" stroke-width="1"/>
+<text x="58.00" y="230.00" font-size="9" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">0</text>
+<line class="ax" x1="157.67" y1="214.00" x2="157.67" y2="218.00" stroke="#3b4354" stroke-width="1"/>
+<text x="157.67" y="230.00" font-size="9" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">5000</text>
+<line class="ax" x1="257.33" y1="214.00" x2="257.33" y2="218.00" stroke="#3b4354" stroke-width="1"/>
+<text x="257.33" y="230.00" font-size="9" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">10000</text>
+<line class="ax" x1="357.00" y1="214.00" x2="357.00" y2="218.00" stroke="#3b4354" stroke-width="1"/>
+<text x="357.00" y="230.00" font-size="9" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">15000</text>
+<line class="ax" x1="456.67" y1="214.00" x2="456.67" y2="218.00" stroke="#3b4354" stroke-width="1"/>
+<text x="456.67" y="230.00" font-size="9" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">20000</text>
+<line class="ax" x1="556.33" y1="214.00" x2="556.33" y2="218.00" stroke="#3b4354" stroke-width="1"/>
+<text x="556.33" y="230.00" font-size="9" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">25000</text>
+<line class="ax" x1="656.00" y1="214.00" x2="656.00" y2="218.00" stroke="#3b4354" stroke-width="1"/>
+<text x="656.00" y="230.00" font-size="9" text-anchor="middle" fill="#a8b0c0" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">30000</text>
+<polyline points="58.00,214.00 59.99,211.21 61.99,208.50 63.98,205.88 65.97,203.32 67.97,200.84 69.96,198.42 71.95,196.08 73.95,193.79 75.94,191.56 77.93,189.40 79.93,187.29 81.92,185.23 83.91,183.22 85.91,181.27 87.90,179.36 89.89,177.50 91.89,175.68 93.88,173.91 95.87,172.17 97.87,170.48 99.86,168.83 101.85,167.21 103.85,165.63 105.84,164.09 107.83,162.58 109.83,161.10 111.82,159.65 113.81,158.23 115.81,156.85 117.80,155.49 119.79,154.16 121.79,152.85 123.78,151.58 125.77,150.32 127.77,149.10 129.76,147.89 131.75,146.71 133.75,145.56 135.74,144.42 137.73,143.31 139.73,142.21 141.72,141.14 143.71,140.09 145.71,139.05 147.70,138.04 149.69,137.04 151.69,136.06 153.68,135.10 155.67,134.15 157.67,133.22 159.66,132.30 161.65,131.41 163.65,130.52 165.64,129.65 167.63,128.80 169.63,127.96 171.62,127.13 173.61,126.32 175.61,125.51 177.60,124.73 179.59,123.95 181.59,123.19 183.58,122.43 185.57,121.69 187.57,120.96 189.56,120.24 191.55,119.54 193.55,118.84 195.54,118.15 197.53,117.48 199.53,116.81 201.52,116.15 203.51,115.50 205.51,114.87 207.50,114.24 209.49,113.61 211.49,113.00 213.48,112.40 215.47,111.80 217.47,111.22 219.46,110.64 221.45,110.07 223.45,109.50 225.44,108.95 227.43,108.40 229.43,107.85 231.42,107.32 233.41,106.79 235.41,106.27 237.40,105.76 239.39,105.25 241.39,104.75 243.38,104.25 245.37,103.76 247.37,103.28 249.36,102.80 251.35,102.33 253.35,101.87 255.34,101.41 257.33,100.95 259.33,100.50 261.32,100.06 263.31,99.62 265.31,99.19 267.30,98.76 269.29,98.34 271.29,97.92 273.28,97.51 275.27,97.10 277.27,96.69 279.26,96.29 281.25,95.90 283.25,95.51 285.24,95.12 287.23,94.74 289.23,94.36 291.22,93.99 293.21,93.62 295.21,93.25 297.20,92.89 299.19,92.53 301.19,92.18 303.18,91.83 305.17,91.48 307.17,91.14 309.16,90.80 311.15,90.46 313.15,90.13 315.14,89.80 317.13,89.47 319.13,89.15 321.12,88.83 323.11,88.52 325.11,88.20 327.10,87.89 329.09,87.59 331.09,87.28 333.08,86.98 335.07,86.68 337.07,86.39 339.06,86.10 341.05,85.81 343.05,85.52 345.04,85.24 347.03,84.96 349.03,84.68 351.02,84.40 353.01,84.13 355.01,83.86 357.00,83.59 358.99,83.32 360.99,83.06 362.98,82.80 364.97,82.54 366.97,82.28 368.96,82.03 370.95,81.78 372.95,81.53 374.94,81.28 376.93,81.04 378.93,80.79 380.92,80.55 382.91,80.31 384.91,80.08 386.90,79.84 388.89,79.61 390.89,79.38 392.88,79.15 394.87,78.92 396.87,78.70 398.86,78.48 400.85,78.26 402.85,78.04 404.84,77.82 406.83,77.60 408.83,77.39 410.82,77.18 412.81,76.97 414.81,76.76 416.80,76.55 418.79,76.35 420.79,76.14 422.78,75.94 424.77,75.74 426.77,75.54 428.76,75.35 430.75,75.15 432.75,74.96 434.74,74.76 436.73,74.57 438.73,74.38 440.72,74.19 442.71,74.01 444.71,73.82 446.70,73.64 448.69,73.46 450.69,73.28 452.68,73.10 454.67,72.92 456.67,72.74 458.66,72.56 460.65,72.39 462.65,72.22 464.64,72.05 466.63,71.88 468.63,71.71 470.62,71.54 472.61,71.37 474.61,71.21 476.60,71.04 478.59,70.88 480.59,70.72 482.58,70.56 484.57,70.40 486.57,70.24 488.56,70.08 490.55,69.92 492.55,69.77 494.54,69.61 496.53,69.46 498.53,69.31 500.52,69.16 502.51,69.01 504.51,68.86 506.50,68.71 508.49,68.57 510.49,68.42 512.48,68.27 514.47,68.13 516.47,67.99 518.46,67.85 520.45,67.70 522.45,67.56 524.44,67.43 526.43,67.29 528.43,67.15 530.42,67.01 532.41,66.88 534.41,66.74 536.40,66.61 538.39,66.48 540.39,66.35 542.38,66.21 544.37,66.08 546.37,65.95 548.36,65.83 550.35,65.70 552.35,65.57 554.34,65.44 556.33,65.32 558.33,65.20 560.32,65.07 562.31,64.95 564.31,64.83 566.30,64.70 568.29,64.58 570.29,64.46 572.28,64.34 574.27,64.23 576.27,64.11 578.26,63.99 580.25,63.87 582.25,63.76 584.24,63.64 586.23,63.53 588.23,63.42 590.22,63.30 592.21,63.19 594.21,63.08 596.20,62.97 598.19,62.86 600.19,62.75 602.18,62.64 604.17,62.53 606.17,62.42 608.16,62.32 610.15,62.21 612.15,62.10 614.14,62.00 616.13,61.90 618.13,61.79 620.12,61.69 622.11,61.58 624.11,61.48 626.10,61.38 628.09,61.28 630.09,61.18 632.08,61.08 634.07,60.98 636.07,60.88 638.06,60.78 640.05,60.69 642.05,60.59 644.04,60.49 646.03,60.40 648.03,60.30 650.02,60.21 652.01,60.11 654.01,60.02 656.00,59.92" fill="none" stroke="#d9b06a" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="58.00,214.00 59.99,211.37 61.99,208.81 63.98,206.32 65.97,203.89 67.97,201.54 69.96,199.24 71.95,197.00 73.95,194.82 75.94,192.69 77.93,190.62 79.93,188.60 81.92,186.62 83.91,184.70 85.91,182.82 87.90,180.98 89.89,179.19 91.89,177.43 93.88,175.72 95.87,174.04 97.87,172.41 99.86,170.80 101.85,169.24 103.85,167.70 105.84,166.20 107.83,164.73 109.83,163.29 111.82,161.88 113.81,160.50 115.81,159.14 117.80,157.82 119.79,156.52 121.79,155.24 123.78,153.99 125.77,152.76 127.77,151.56 129.76,150.38 131.75,149.22 133.75,148.08 135.74,146.96 137.73,145.87 139.73,144.79 141.72,143.73 143.71,142.69 145.71,141.67 147.70,140.67 149.69,139.68 151.69,138.71 153.68,137.76 155.67,136.82 157.67,135.90 159.66,134.99 161.65,134.10 163.65,133.23 165.64,132.36 167.63,131.51 169.63,130.68 171.62,129.85 173.61,129.04 175.61,128.25 177.60,127.46 179.59,126.69 181.59,125.93 183.58,125.18 185.57,124.44 187.57,123.71 189.56,122.99 191.55,122.28 193.55,121.59 195.54,120.90 197.53,120.22 199.53,119.56 201.52,118.90 203.51,118.25 205.51,117.61 207.50,116.98 209.49,116.36 211.49,115.74 213.48,115.14 215.47,114.54 217.47,113.95 219.46,113.37 221.45,112.79 223.45,112.22 225.44,111.67 227.43,111.11 229.43,110.57 231.42,110.03 233.41,109.50 235.41,108.97 237.40,108.45 239.39,107.94 241.39,107.44 243.38,106.94 245.37,106.44 247.37,105.96 249.36,105.47 251.35,105.00 253.35,104.53 255.34,104.06 257.33,103.60 259.33,103.15 261.32,102.70 263.31,102.26 265.31,101.82 267.30,101.39 269.29,100.96 271.29,100.53 273.28,100.12 275.27,99.70 277.27,99.29 279.26,98.89 281.25,98.49 283.25,98.09 285.24,97.70 287.23,97.31 289.23,96.93 291.22,96.55 293.21,96.17 295.21,95.80 297.20,95.43 299.19,95.07 301.19,94.71 303.18,94.35 305.17,94.00 307.17,93.65 309.16,93.31 311.15,92.96 313.15,92.63 315.14,92.29 317.13,91.96 319.13,91.63 321.12,91.30 323.11,90.98 325.11,90.66 327.10,90.35 329.09,90.04 331.09,89.73 333.08,89.42 335.07,89.11 337.07,88.81 339.06,88.52 341.05,88.22 343.05,87.93 345.04,87.64 347.03,87.35 349.03,87.07 351.02,86.78 353.01,86.51 355.01,86.23 357.00,85.95 358.99,85.68 360.99,85.41 362.98,85.15 364.97,84.88 366.97,84.62 368.96,84.36 370.95,84.10 372.95,83.85 374.94,83.59 376.93,83.34 378.93,83.09 380.92,82.85 382.91,82.60 384.91,82.36 386.90,82.12 388.89,81.88 390.89,81.65 392.88,81.41 394.87,81.18 396.87,80.95 398.86,80.72 400.85,80.49 402.85,80.27 404.84,80.05 406.83,79.83 408.83,79.61 410.82,79.39 412.81,79.17 414.81,78.96 416.80,78.75 418.79,78.54 420.79,78.33 422.78,78.12 424.77,77.91 426.77,77.71 428.76,77.51 430.75,77.31 432.75,77.11 434.74,76.91 436.73,76.71 438.73,76.52 440.72,76.32 442.71,76.13 444.71,75.94 446.70,75.75 448.69,75.57 450.69,75.38 452.68,75.19 454.67,75.01 456.67,74.83 458.66,74.65 460.65,74.47 462.65,74.29 464.64,74.11 466.63,73.94 468.63,73.76 470.62,73.59 472.61,73.42 474.61,73.25 476.60,73.08 478.59,72.91 480.59,72.75 482.58,72.58 484.57,72.41 486.57,72.25 488.56,72.09 490.55,71.93 492.55,71.77 494.54,71.61 496.53,71.45 498.53,71.29 500.52,71.14 502.51,70.98 504.51,70.83 506.50,70.68 508.49,70.53 510.49,70.38 512.48,70.23 514.47,70.08 516.47,69.93 518.46,69.78 520.45,69.64 522.45,69.49 524.44,69.35 526.43,69.21 528.43,69.07 530.42,68.93 532.41,68.79 534.41,68.65 536.40,68.51 538.39,68.37 540.39,68.24 542.38,68.10 544.37,67.97 546.37,67.83 548.36,67.70 550.35,67.57 552.35,67.44 554.34,67.30 556.33,67.18 558.33,67.05 560.32,66.92 562.31,66.79 564.31,66.66 566.30,66.54 568.29,66.41 570.29,66.29 572.28,66.17 574.27,66.04 576.27,65.92 578.26,65.80 580.25,65.68 582.25,65.56 584.24,65.44 586.23,65.32 588.23,65.21 590.22,65.09 592.21,64.97 594.21,64.86 596.20,64.74 598.19,64.63 600.19,64.52 602.18,64.40 604.17,64.29 606.17,64.18 608.16,64.07 610.15,63.96 612.15,63.85 614.14,63.74 616.13,63.63 618.13,63.52 620.12,63.42 622.11,63.31 624.11,63.20 626.10,63.10 628.09,62.99 630.09,62.89 632.08,62.79 634.07,62.68 636.07,62.58 638.06,62.48 640.05,62.38 642.05,62.28 644.04,62.18 646.03,62.08 648.03,61.98 650.02,61.88 652.01,61.78 654.01,61.68 656.00,61.59" fill="none" stroke="#6aa9e0" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="58.00,214.00 59.99,211.72 61.99,209.50 63.98,207.33 65.97,205.22 67.97,203.15 69.96,201.12 71.95,199.15 73.95,197.21 75.94,195.32 77.93,193.47 79.93,191.67 81.92,189.90 83.91,188.16 85.91,186.47 87.90,184.80 89.89,183.18 91.89,181.58 93.88,180.02 95.87,178.49 97.87,176.99 99.86,175.51 101.85,174.07 103.85,172.65 105.84,171.26 107.83,169.90 109.83,168.56 111.82,167.25 113.81,165.96 115.81,164.69 117.80,163.45 119.79,162.23 121.79,161.03 123.78,159.85 125.77,158.69 127.77,157.55 129.76,156.43 131.75,155.33 133.75,154.25 135.74,153.18 137.73,152.14 139.73,151.11 141.72,150.09 143.71,149.10 145.71,148.12 147.70,147.15 149.69,146.20 151.69,145.26 153.68,144.34 155.67,143.44 157.67,142.54 159.66,141.66 161.65,140.80 163.65,139.94 165.64,139.10 167.63,138.27 169.63,137.45 171.62,136.65 173.61,135.85 175.61,135.07 177.60,134.30 179.59,133.54 181.59,132.79 183.58,132.05 185.57,131.32 187.57,130.60 189.56,129.89 191.55,129.19 193.55,128.50 195.54,127.82 197.53,127.15 199.53,126.48 201.52,125.83 203.51,125.18 205.51,124.54 207.50,123.91 209.49,123.29 211.49,122.68 213.48,122.07 215.47,121.47 217.47,120.88 219.46,120.29 221.45,119.72 223.45,119.15 225.44,118.58 227.43,118.02 229.43,117.47 231.42,116.93 233.41,116.39 235.41,115.86 237.40,115.34 239.39,114.82 241.39,114.31 243.38,113.80 245.37,113.30 247.37,112.80 249.36,112.31 251.35,111.83 253.35,111.35 255.34,110.88 257.33,110.41 259.33,109.95 261.32,109.49 263.31,109.03 265.31,108.59 267.30,108.14 269.29,107.70 271.29,107.27 273.28,106.84 275.27,106.41 277.27,105.99 279.26,105.58 281.25,105.17 283.25,104.76 285.24,104.35 287.23,103.95 289.23,103.56 291.22,103.17 293.21,102.78 295.21,102.40 297.20,102.02 299.19,101.64 301.19,101.27 303.18,100.90 305.17,100.53 307.17,100.17 309.16,99.81 311.15,99.46 313.15,99.11 315.14,98.76 317.13,98.41 319.13,98.07 321.12,97.73 323.11,97.40 325.11,97.07 327.10,96.74 329.09,96.41 331.09,96.09 333.08,95.77 335.07,95.45 337.07,95.14 339.06,94.83 341.05,94.52 343.05,94.21 345.04,93.91 347.03,93.61 349.03,93.31 351.02,93.01 353.01,92.72 355.01,92.43 357.00,92.14 358.99,91.86 360.99,91.58 362.98,91.30 364.97,91.02 366.97,90.74 368.96,90.47 370.95,90.20 372.95,89.93 374.94,89.66 376.93,89.40 378.93,89.14 380.92,88.88 382.91,88.62 384.91,88.36 386.90,88.11 388.89,87.86 390.89,87.61 392.88,87.36 394.87,87.11 396.87,86.87 398.86,86.63 400.85,86.39 402.85,86.15 404.84,85.91 406.83,85.68 408.83,85.45 410.82,85.22 412.81,84.99 414.81,84.76 416.80,84.53 418.79,84.31 420.79,84.09 422.78,83.87 424.77,83.65 426.77,83.43 428.76,83.22 430.75,83.00 432.75,82.79 434.74,82.58 436.73,82.37 438.73,82.16 440.72,81.96 442.71,81.75 444.71,81.55 446.70,81.35 448.69,81.15 450.69,80.95 452.68,80.75 454.67,80.56 456.67,80.36 458.66,80.17 460.65,79.98 462.65,79.79 464.64,79.60 466.63,79.41 468.63,79.22 470.62,79.04 472.61,78.85 474.61,78.67 476.60,78.49 478.59,78.31 480.59,78.13 482.58,77.95 484.57,77.78 486.57,77.60 488.56,77.43 490.55,77.26 492.55,77.08 494.54,76.91 496.53,76.74 498.53,76.57 500.52,76.41 502.51,76.24 504.51,76.08 506.50,75.91 508.49,75.75 510.49,75.59 512.48,75.43 514.47,75.27 516.47,75.11 518.46,74.95 520.45,74.79 522.45,74.64 524.44,74.48 526.43,74.33 528.43,74.18 530.42,74.02 532.41,73.87 534.41,73.72 536.40,73.57 538.39,73.43 540.39,73.28 542.38,73.13 544.37,72.99 546.37,72.84 548.36,72.70 550.35,72.56 552.35,72.41 554.34,72.27 556.33,72.13 558.33,71.99 560.32,71.85 562.31,71.72 564.31,71.58 566.30,71.44 568.29,71.31 570.29,71.17 572.28,71.04 574.27,70.91 576.27,70.78 578.26,70.64 580.25,70.51 582.25,70.38 584.24,70.25 586.23,70.13 588.23,70.00 590.22,69.87 592.21,69.75 594.21,69.62 596.20,69.50 598.19,69.37 600.19,69.25 602.18,69.13 604.17,69.00 606.17,68.88 608.16,68.76 610.15,68.64 612.15,68.52 614.14,68.40 616.13,68.29 618.13,68.17 620.12,68.05 622.11,67.94 624.11,67.82 626.10,67.71 628.09,67.59 630.09,67.48 632.08,67.37 634.07,67.25 636.07,67.14 638.06,67.03 640.05,66.92 642.05,66.81 644.04,66.70 646.03,66.59 648.03,66.49 650.02,66.38 652.01,66.27 654.01,66.16 656.00,66.06" fill="none" stroke="#6fc08a" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="58.00,214.00 59.99,212.20 61.99,210.44 63.98,208.71 65.97,207.01 67.97,205.34 69.96,203.71 71.95,202.10 73.95,200.52 75.94,198.97 77.93,197.45 79.93,195.95 81.92,194.48 83.91,193.03 85.91,191.61 87.90,190.21 89.89,188.84 91.89,187.49 93.88,186.16 95.87,184.85 97.87,183.57 99.86,182.30 101.85,181.06 103.85,179.83 105.84,178.63 107.83,177.44 109.83,176.27 111.82,175.12 113.81,173.98 115.81,172.87 117.80,171.77 119.79,170.68 121.79,169.61 123.78,168.56 125.77,167.53 127.77,166.50 129.76,165.50 131.75,164.50 133.75,163.52 135.74,162.56 137.73,161.61 139.73,160.67 141.72,159.74 143.71,158.83 145.71,157.93 147.70,157.04 149.69,156.16 151.69,155.30 153.68,154.44 155.67,153.60 157.67,152.77 159.66,151.95 161.65,151.14 163.65,150.34 165.64,149.55 167.63,148.77 169.63,148.00 171.62,147.24 173.61,146.49 175.61,145.74 177.60,145.01 179.59,144.29 181.59,143.57 183.58,142.87 185.57,142.17 187.57,141.48 189.56,140.80 191.55,140.12 193.55,139.46 195.54,138.80 197.53,138.15 199.53,137.50 201.52,136.87 203.51,136.24 205.51,135.62 207.50,135.00 209.49,134.39 211.49,133.79 213.48,133.20 215.47,132.61 217.47,132.03 219.46,131.45 221.45,130.88 223.45,130.32 225.44,129.76 227.43,129.21 229.43,128.67 231.42,128.13 233.41,127.59 235.41,127.07 237.40,126.54 239.39,126.03 241.39,125.51 243.38,125.01 245.37,124.50 247.37,124.01 249.36,123.52 251.35,123.03 253.35,122.55 255.34,122.07 257.33,121.60 259.33,121.13 261.32,120.66 263.31,120.21 265.31,119.75 267.30,119.30 269.29,118.85 271.29,118.41 273.28,117.98 275.27,117.54 277.27,117.11 279.26,116.69 281.25,116.27 283.25,115.85 285.24,115.43 287.23,115.02 289.23,114.62 291.22,114.22 293.21,113.82 295.21,113.42 297.20,113.03 299.19,112.64 301.19,112.26 303.18,111.87 305.17,111.50 307.17,111.12 309.16,110.75 311.15,110.38 313.15,110.02 315.14,109.65 317.13,109.30 319.13,108.94 321.12,108.59 323.11,108.24 325.11,107.89 327.10,107.55 329.09,107.20 331.09,106.87 333.08,106.53 335.07,106.20 337.07,105.87 339.06,105.54 341.05,105.22 343.05,104.89 345.04,104.57 347.03,104.26 349.03,103.94 351.02,103.63 353.01,103.32 355.01,103.01 357.00,102.71 358.99,102.41 360.99,102.11 362.98,101.81 364.97,101.52 366.97,101.22 368.96,100.93 370.95,100.64 372.95,100.36 374.94,100.07 376.93,99.79 378.93,99.51 380.92,99.24 382.91,98.96 384.91,98.69 386.90,98.42 388.89,98.15 390.89,97.88 392.88,97.61 394.87,97.35 396.87,97.09 398.86,96.83 400.85,96.57 402.85,96.31 404.84,96.06 406.83,95.81 408.83,95.56 410.82,95.31 412.81,95.06 414.81,94.82 416.80,94.57 418.79,94.33 420.79,94.09 422.78,93.85 424.77,93.62 426.77,93.38 428.76,93.15 430.75,92.92 432.75,92.69 434.74,92.46 436.73,92.23 438.73,92.01 440.72,91.78 442.71,91.56 444.71,91.34 446.70,91.12 448.69,90.90 450.69,90.68 452.68,90.47 454.67,90.26 456.67,90.04 458.66,89.83 460.65,89.62 462.65,89.41 464.64,89.21 466.63,89.00 468.63,88.80 470.62,88.59 472.61,88.39 474.61,88.19 476.60,87.99 478.59,87.80 480.59,87.60 482.58,87.40 484.57,87.21 486.57,87.02 488.56,86.83 490.55,86.64 492.55,86.45 494.54,86.26 496.53,86.07 498.53,85.89 500.52,85.70 502.51,85.52 504.51,85.34 506.50,85.15 508.49,84.97 510.49,84.79 512.48,84.62 514.47,84.44 516.47,84.26 518.46,84.09 520.45,83.92 522.45,83.74 524.44,83.57 526.43,83.40 528.43,83.23 530.42,83.06 532.41,82.89 534.41,82.73 536.40,82.56 538.39,82.40 540.39,82.23 542.38,82.07 544.37,81.91 546.37,81.75 548.36,81.59 550.35,81.43 552.35,81.27 554.34,81.11 556.33,80.96 558.33,80.80 560.32,80.65 562.31,80.49 564.31,80.34 566.30,80.19 568.29,80.04 570.29,79.89 572.28,79.74 574.27,79.59 576.27,79.44 578.26,79.29 580.25,79.15 582.25,79.00 584.24,78.86 586.23,78.71 588.23,78.57 590.22,78.43 592.21,78.28 594.21,78.14 596.20,78.00 598.19,77.86 600.19,77.72 602.18,77.59 604.17,77.45 606.17,77.31 608.16,77.18 610.15,77.04 612.15,76.91 614.14,76.77 616.13,76.64 618.13,76.51 620.12,76.38 622.11,76.25 624.11,76.12 626.10,75.99 628.09,75.86 630.09,75.73 632.08,75.60 634.07,75.48 636.07,75.35 638.06,75.22 640.05,75.10 642.05,74.97 644.04,74.85 646.03,74.73 648.03,74.60 650.02,74.48 652.01,74.36 654.01,74.24 656.00,74.12" fill="none" stroke="#9aa4b8" stroke-width="2.2" stroke-linejoin="round"/>
+<rect x="64.00" y="56.00" width="108.00" height="81.00" fill="#12151c" stroke="#4a5468" stroke-width="1" rx="7"/>
+<line x1="70.00" y1="64.50" x2="80.00" y2="64.50" stroke="#d9b06a" stroke-width="2.2"/>
+<text x="85.00" y="68.00" font-size="9" text-anchor="start" fill="#e8eaef" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">等级 7</text>
+<line x1="70.00" y1="79.50" x2="80.00" y2="79.50" stroke="#6aa9e0" stroke-width="2.2"/>
+<text x="85.00" y="83.00" font-size="9" text-anchor="start" fill="#e8eaef" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">等级 17</text>
+<line x1="70.00" y1="94.50" x2="80.00" y2="94.50" stroke="#6fc08a" stroke-width="2.2"/>
+<text x="85.00" y="98.00" font-size="9" text-anchor="start" fill="#e8eaef" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">等级 45</text>
+<line x1="70.00" y1="109.50" x2="80.00" y2="109.50" stroke="#9aa4b8" stroke-width="2.2"/>
+<text x="85.00" y="113.00" font-size="9" text-anchor="start" fill="#e8eaef" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">等级 100</text>
+<circle cx="75.00" cy="124.50" r="2.8" fill="#12151c" stroke="#e8eaef" stroke-width="1.6"/>
+<text x="85.00" y="128.00" font-size="9" text-anchor="start" fill="#e8eaef" font-weight="400" font-family="-apple-system,'Segoe UI','PingFang SC',sans-serif">实测样本（25 个）</text>
+<circle cx="84.95" cy="179.43" r="2.8" fill="#12151c" stroke="#d9b06a" stroke-width="1.5"/>
+<circle cx="85.75" cy="180.91" r="2.8" fill="#12151c" stroke="#d9b06a" stroke-width="1.5"/>
+<circle cx="86.31" cy="177.32" r="2.8" fill="#12151c" stroke="#d9b06a" stroke-width="1.5"/>
+<circle cx="83.00" cy="180.29" r="2.8" fill="#12151c" stroke="#d9b06a" stroke-width="1.5"/>
+<circle cx="81.46" cy="185.43" r="2.8" fill="#12151c" stroke="#d9b06a" stroke-width="1.5"/>
+<circle cx="325.88" cy="97.69" r="2.8" fill="#12151c" stroke="#6fc08a" stroke-width="1.5"/>
+<circle cx="313.27" cy="99.09" r="2.8" fill="#12151c" stroke="#6fc08a" stroke-width="1.5"/>
+<circle cx="340.26" cy="93.84" r="2.8" fill="#12151c" stroke="#6fc08a" stroke-width="1.5"/>
+<circle cx="358.55" cy="91.24" r="2.8" fill="#12151c" stroke="#6fc08a" stroke-width="1.5"/>
+<circle cx="146.32" cy="143.08" r="2.8" fill="#12151c" stroke="#6aa9e0" stroke-width="1.5"/>
+<circle cx="146.32" cy="142.90" r="2.8" fill="#12151c" stroke="#6aa9e0" stroke-width="1.5"/>
+<circle cx="172.00" cy="126.73" r="2.8" fill="#12151c" stroke="#6aa9e0" stroke-width="1.5"/>
+<circle cx="172.00" cy="131.88" r="2.8" fill="#12151c" stroke="#6aa9e0" stroke-width="1.5"/>
+<circle cx="172.00" cy="127.21" r="2.8" fill="#12151c" stroke="#6aa9e0" stroke-width="1.5"/>
+<circle cx="172.00" cy="131.33" r="2.8" fill="#12151c" stroke="#6aa9e0" stroke-width="1.5"/>
+<circle cx="172.00" cy="131.54" r="2.8" fill="#12151c" stroke="#6aa9e0" stroke-width="1.5"/>
+<circle cx="172.00" cy="133.71" r="2.8" fill="#12151c" stroke="#6aa9e0" stroke-width="1.5"/>
+<circle cx="182.78" cy="129.09" r="2.8" fill="#12151c" stroke="#6aa9e0" stroke-width="1.5"/>
+<circle cx="182.78" cy="126.93" r="2.8" fill="#12151c" stroke="#6aa9e0" stroke-width="1.5"/>
+<circle cx="183.38" cy="125.23" r="2.8" fill="#12151c" stroke="#6aa9e0" stroke-width="1.5"/>
+<circle cx="183.38" cy="121.09" r="2.8" fill="#12151c" stroke="#6aa9e0" stroke-width="1.5"/>
+<circle cx="183.38" cy="128.84" r="2.8" fill="#12151c" stroke="#6aa9e0" stroke-width="1.5"/>
+<circle cx="183.38" cy="128.27" r="2.8" fill="#12151c" stroke="#6aa9e0" stroke-width="1.5"/>
+<circle cx="183.38" cy="123.72" r="2.8" fill="#12151c" stroke="#6aa9e0" stroke-width="1.5"/>
+<circle cx="183.38" cy="129.09" r="2.8" fill="#12151c" stroke="#6aa9e0" stroke-width="1.5"/>
+</svg>
+<figcaption>
+  <b>免伤率随防御力的变化</b>（四个等级族）。
+  曲线一律<b>向右上方收敛</b> —— 防御堆到后期，加同样的防御换来的免伤越来越少。
+  但同一张 DEF 刻度上，等级越高曲线反而越低（这部分是设计失误？还是意有所图？）：
+  DEF 8,000 时 lv7 有 54.6% 免伤，lv100 只有 43.5%，
+  相差 11.1 个百分点 —— 这是分母里等级项造成的。
+  <b>25 个空心点是本作全部实测样本</b>，按守方等级着色 ——
+  每一个都贴在对应等级的曲线上，<b>与模型值的最大偏差只有 2.21 个百分点</b>，
+  没有任何一个偏离超过 ±5pp。
+</figcaption>
+</figure>
+
+<!-- ========================================================= DEF 存疑 -->
+<h2 class="sec" id="sem"><em>4</em>DEF 存疑：减法型还是乘法型</h2>
+
+<p class="lead-p">
+  官方口径（社区 wiki）写的是：<b>防御 DEF = 按固定值抵扣伤害（减法型）</b>。
+  若成立，被减免的伤害应当恒等于 DEF。但实测数据不是这样。
+</p>
+
+<table class="tbl">
+  <thead><tr><th>检验</th><th>减法型的预言</th><th>实测结果</th><th style="width:90px">判定</th></tr></thead>
+  <tbody>
+    <tr><td>伤害相对残差最大值</td><td>≤ ±5%</td><td class="mono">减法模型最大残差远超 5%</td><td class="bad">否决</td></tr>
+    <tr><td>打出负伤害的样本数</td><td>0</td><td class="mono">20 / 25</td><td class="bad">否决</td></tr>
+    <tr><td>「被减免伤害 ÷ DEF」比值</td><td>恒等于 1.00</td><td class="mono">0.0098 ～ 0.9876（极差 97.8pp）</td><td class="bad">否决</td></tr>
+    <tr class="hi"><td>乘法型（DEF→免伤率→相乘）</td><td>—</td><td class="mono">25/25 残差在 ±5% 带内</td><td class="ok">成立</td></tr>
+  </tbody>
+</table>
+
+<p>两个极端样本最能说明问题：</p>
+
+<table class="tbl">
+  <thead><tr><th>样本</th><th>系数×攻击×(1−K)</th><th>实测伤害</th><th>被减免</th><th>DEF</th><th>减免 ÷ DEF</th></tr></thead>
+  <tbody>
+    <tr><td>草莓饼干 lv7</td><td class="mono">68.5</td><td class="mono">56.2</td><td class="mono">12.3</td><td class="mono">1,254</td><td class="mono">0.0098</td></tr>
+    <tr><td>黑麦饼干 lv45</td><td class="mono">20,715.9</td><td class="mono">8,070.0</td><td class="mono">12,645.9</td><td class="mono">12,806</td><td class="mono">0.9876</td></tr>
+  </tbody>
+</table>
+
+<p>
+  行 8 的伤害基数只有 68.5，DEF 却有 1,254 —— 若是减法型，这一击根本打不出来（减法模型给出负伤害）。
+  同一批数据里，行 11 的比值却逼近 0.99，减法型在那里「看起来对」。
+  <b>比值从 1% 跑到 99%，恰恰说明它不是恒等于 1 的减法型</b>；
+  高防端接近 1 只是大数巧合。
+</p>
+
+<div class="box warnb">
+  <span class="bh">这个冲突有两种解释</span>
+  ① 社区 wiki 口径本身有误；
+  ② 战斗表与 wiki 取自不同版本，DEF 定义在版本间改过；
+  本作品<b>采用实测口径</b>（乘法型），并把这一条列入待验证清单。
+  它不影响本作品其余结论 —— 免伤率函数的闭合只依赖 DEF 与免伤率之间的映射关系，不依赖 DEF 在游戏内部的实现方式。
+</div>
+
+<!-- ========================================================= 伤害随机性 -->
+<h2 class="sec" id="rand"><em>5</em>伤害随机性</h2>
+
+<p class="lead-p">
+  战斗表里有两组校验列，把随机性拆得很干净。这两条都是「已验证」级结论，但它们能解释
+  本作品为什么必须用 ±5% 的噪声界而不是更小的容差。
+</p>
+
+<div class="grid2">
+  <div class="panel">
+    <h4><span class="dot" style="background:var(--indigo)"></span>参数一 · 伤害浮动 ±5%</h4>
+    <p>表内用 <code>INT(基准)×0.95</code> 与 <code>×1.05</code> 作为上下界校验，
+       即每次伤害 = 基准 × U[0.95, 1.05]。</p>
+    <div class="f">σ_O = 5% × O<br>→ σ_Q = 5% × (1 − Q)<br>→ σ_c ≈ 5% ÷ Q</div>
+    <p>这三级传递就是第 3.2 节误差传播链的来源。</p>
+  </div>
+  <div class="panel">
+    <h4><span class="dot" style="background:var(--amber)"></span>参数二 · 暴伤抗 线性削减暴击倍率</h4>
+    <p>普通伤害期望式写作 <code>= 暴击伤害/2/(1.5−L) + 非暴击/2</code>，
+       可见暴伤抗 <b>L 直接从倍率里减</b>，不是降低暴击概率。</p>
+    <div class="f">暴击伤害 = 非暴击伤害 × (1.5 − 暴伤抗)</div>
+    <p>暴伤抗 0.078 → 倍率 1.422；堆到 0.5 → 倍率 1.0，<b>暴击完全失效</b>。</p>
+  </div>
+</div>
+
+<div class="note">
+  <span class="nh">第二个参数的设计评价：线性封闭，但有断崖</span>
+  <dl>
+    <dt>优点</dt><dd>天生有上限（暴伤抗 &lt; 0.5 才有意义），不需要额外钳制，
+      也不像「暴击伤害减免百分比」那样容易叠出无上限组合。</dd>
+    <dt>代价</dt><dd>收益曲线陡峭 —— 暴伤抗从 0.45 涨到 0.50，
+      暴击倍率从 1.05 掉到 1.00，
+      <b>再堆 5% 就把整套暴击流废掉了</b>。</dd>
+    <dt>迁移价值</dt><dd>这是「用线性封顶替代独立上限」的典型样本：
+      省掉一个参数，但把断崖风险从数值侧转移到配装侧。</dd>
+  </dl>
+</div>
+
+<!-- ========================================================= 四款防御 -->
+<h2 class="sec" id="quad"><em>6</em>四款游戏的防御对比</h2>
+
+<p class="lead-p">
+  作者在《模型演算.xlsm》里把四款同品类游戏的伤害公式放进同一张表，
+  在<b>同一组输入</b>下横向对照。这是量化「防御差异」最直接的办法。
+  减伤形态被分成四类：减法、乘法、除法。
+</p>
+
+<table class="tbl">
+  <thead><tr><th>游戏</th><th>形态</th><th>公式</th><th>末行伤害<br><span style="font-weight:400;color:var(--muted)">攻击 10800 · 等级 237 · 防御 1200</span></th><th>同约束压制率</th></tr></thead>
+  <tbody>
+    <tr><td>萌萌</td><td class="warn">减法</td><td class="mono">(攻击 − 防御) × 系数 × 条件收益</td><td class="mono">21,600</td><td class="mono">11.11%</td></tr>
+    <tr class="hi"><td><b>姜饼人王国</b></td><td>乘法</td><td class="mono">攻击 × (1 − 防御/(防御 + 等级×40 + 6371)) × 系数</td><td class="mono">22,589.84</td><td class="mono">7.04%</td></tr>
+    <tr><td>放置三国</td><td>乘法</td><td class="mono">攻击 × (1 − 防御/(防御 + 等级×2 + 598)) × 系数</td><td class="mono">11,465.49</td><td class="mono">52.82%</td></tr>
+    <tr><td>第七史诗</td><td class="bad">除法</td><td class="mono">攻击 × 系数 ÷ (防御×贯穿/300 + 1)</td><td class="mono">8,100</td><td class="mono">66.67%</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <span class="nh">同一个「防御 800」的约束，压制率差了近 12 倍</span>
+  <dl>
+    <dt>萌萌</dt><dd>7.41% —— 减法型，防御高过攻击就完全失效</dd>
+    <dt>姜饼人</dt><dd>4.81% —— 乘法型，但分母里等级系数高达 40，
+      把防御的减伤贡献压得很低</dd>
+    <dt>放置三国</dt><dd>42.74% —— 同为乘法型，但等级系数只有 2，
+      分母被等级项压住的比例小得多</dd>
+    <dt>第七史诗</dt><dd>57.14% —— 除法型，防御进入分母的线性项，压制最狠</dd>
+    <dt>结论</dt><dd>「减伤公式长得像乘法型」不代表数值接近。
+      决定压制强度的是<b>分母里等级项与常量的比例</b>：
+      姜饼人的 6371 + 40×等级 在 lv45 时是 8171，
+      而放置三国的 598 + 2×等级 在 lv100 时只有 798 ——
+      同样是「防御 ÷ (防御 + 一个小常数)」，
+      姜饼人这一条把防御的贡献压到了放置三国的四分之一。</dd>
+  </dl>
+</div>
+
+<!-- ========================================================= 计算器 -->
+<h2 class="sec" id="calc"><em>7</em>计算器</h2>
+
+<p class="lead-p">
+  两套口径放在一起算：<b>官方双轨口径</b>（DR 与 DEF 各走一轨）
+  与 <b>模型演算口径</b>（DEF 转成免伤率）。
+  改任一输入，下面六个输出同时重算。
+</p>
+
+<div class="calc">
+  <div class="cgrid">
+    <div><label>生命 HP</label><input id="i-hp" type="number" value="90000" step="1000"></div>
+    <div><label>攻击 ATK</label><input id="i-atk" type="number" value="45000" step="1000"></div>
+    <div><label>防御 DEF</label><input id="i-def" type="number" value="6290" step="100"></div>
+    <div><label>等级</label><input id="i-lv" type="number" value="17" step="1"></div>
+    <div><label>伤害减免 DR</label><input id="i-dr" type="number" value="0.78" step="0.01"></div>
+    <div><label>穿透 Bypass</label><input id="i-bp" type="number" value="0" step="0.05"></div>
+    <div><label>暴击率 CRIT%</label><input id="i-crit" type="number" value="0.35" step="0.05"></div>
+    <div><label>技能系数</label><input id="i-coef" type="number" value="3.5" step="0.1"></div>
+  </div>
+
+  <div class="outs">
+    <div class="out acc"><div class="ol">官方口径 · 有效免伤</div><div class="ov" id="o-eff">—</div></div>
+    <div class="out acc"><div class="ol">官方口径 · 有效生命 EHP</div><div class="ov" id="o-ehp">—</div></div>
+    <div class="out acc"><div class="ol">官方口径 · 期望伤害</div><div class="ov" id="o-exp">—</div></div>
+    <div class="out"><div class="ol">模型演算口径 · DEF 免伤率</div><div class="ov" id="o-qm">—</div></div>
+    <div class="out"><div class="ol">模型演算口径 · 伤害</div><div class="ov" id="o-dm">—</div></div>
+    <div class="out"><div class="ol">四款公式 · 伤害极差</div><div class="ov" id="o-span">—</div></div>
+  </div>
+
+  <div class="cverdict" id="o-verdict">—</div>
+</div>
+
+<div class="note">
+  <span class="nh">计算器里刻意保留的三处口径差异</span>
+  <dl>
+    <dt>上限不同</dt><dd>官方口径按饼干上限 0.90 计算（未穿透时）。
+      若想看非 PVP 敌人的 0.95，改 DR 到 0.95 以上即可看到被截断的效果。</dd>
+    <dt>防御只进一条轨</dt><dd>官方口径下 DEF <b>不进</b>期望伤害公式（官方口径称其为减法型固定抵扣）；
+      模型演算口径下 DEF <b>会</b>进免伤率。两个数字的差就是两套口径的分歧量。</dd>
+    <dt>七史诗的贯穿</dt><dd>四款公式对照里第七史诗用的是除法形态，
+      防御进入分母的线性项，贯穿系数取 0.5（与源表一致）。</dd>
+  </dl>
+</div>
+
+
+<footer>
+  <p>
+    素材：《姜饼人王国》- 战斗.xlsx（实测战斗表）、
+    《姜饼人王国》数值模型.xlsx（14 页签档案）、
+    《模型演算.xlsm》（自建跨游戏对照模型）、
+    优化更新/csv/（8 份公式结果导出）。
+  </p>
+</footer>
+
+</div>
+
+<script>
+(function(){
+  var K_JBR = 6371, LVC_JBR = 40, K_FZS = 598, LVC_FZS = 2,
+      K_GING = 6371, LVC_GING = 40, PIERCE_DIV = 300, PIERCE = 0.5;
+  function n(id){ var e=document.getElementById(id); var v=parseFloat(e.value);
+                  return isNaN(v)?0:v; }
+  function fmt(v,d){ d=(d===undefined)?0:d;
+    return v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+  function pct(v,d){ return fmt(v*100,(d===undefined)?2:d)+'%'; }
+
+  function calc(){
+    var hp=n('i-hp'), atk=n('i-atk'), df=n('i-def'), lv=n('i-lv'),
+        dr=n('i-dr'), bp=n('i-bp'), crit=n('i-crit'), coef=n('i-coef');
+    var CAP = 0.90;
+
+    // 官方双轨口径
+    var eff = Math.min(dr*(1-bp), CAP);
+    var ehp = hp/(1-eff);
+    var critExp = 1 + crit*(2-1);
+    var expDmg = atk*coef*critExp*(1-eff);
+
+    // 模型演算口径（姜饼人列）
+    var cm = K_JBR + LVC_JBR*lv;
+    var qm = df/(df+cm);
+    var dmgM = atk*(1-qm)*coef*1;
+
+    // 四款公式（同一组输入）
+    var meng = Math.max(0, atk-df)*coef;
+    var fzs  = atk*(1-df/(df+lv*LVC_FZS+K_FZS))*coef;
+    var ging = atk*(1-df/(df+lv*LVC_GING+K_GING))*coef;
+    var epic = atk*coef/(df*PIERCE/PIERCE_DIV+1);
+    var arr=[meng,fzs,ging,epic];
+    var mx=Math.max.apply(null,arr), mn=Math.min.apply(null,arr);
+    var span = mn>0 ? mx/mn : 0;
+
+    document.getElementById('o-eff').innerHTML = pct(eff);
+    document.getElementById('o-ehp').innerHTML = fmt(ehp,0);
+    document.getElementById('o-exp').innerHTML = fmt(expDmg,0);
+    document.getElementById('o-qm').innerHTML = pct(qm);
+    document.getElementById('o-dm').innerHTML = fmt(dmgM,0);
+    document.getElementById('o-span').innerHTML = span? fmt(span,2)+'×' : '—';
+
+    // 判断句
+    var v=document.getElementById('o-verdict'), cls='cverdict', h='';
+    if(df>0 && eff>=CAP-1e-12 && bp<=0){
+      v.className='cverdict warn';
+      h='<b>伤害减免已顶到 90% 上限</b>：再堆 DR 不再提高坦度（EHP 封顶 '
+        + fmt(hp/(1-CAP),0)+'）。此时唯一的坦度增量来自生命与防御。';
+    } else if(bp>0){
+      v.className='cverdict';
+      h='<b>穿透把有效免伤从 '+pct(dr)+' 压到 '+pct(eff)+'</b>，'
+        +'EHP 从 '+fmt(hp/(1-Math.min(dr,CAP)),0)+' 掉到 '+fmt(ehp,0)+'，'
+        +'这就是 PVP 里穿透位是唯一解的原因。';
+    } else if(eff<0.3 && dr<0.3){
+      v.className='cverdict warn';
+      h='<b>有效免伤仅 '+pct(eff)+'</b>：这套装在同战力对局里会被秒，'
+        +'先补伤害减免再谈其他。';
+    } else {
+      v.className='cverdict';
+      h='<b>官方口径 EHP '+fmt(ehp,0)+'</b>（有效免伤 '+pct(eff)+'）。'
+        +'模型演算口径下同一套防御给出免伤率 '+pct(qm)+'、伤害 '+fmt(dmgM,0)
+        +' —— 两套口径的差值来自 DEF 是否转成减伤率。';
+    }
+    v.innerHTML = h;
+  }
+
+  var ids=['i-hp','i-atk','i-def','i-lv','i-dr','i-bp','i-crit','i-coef'];
+  ids.forEach(function(id){
+    document.getElementById(id).addEventListener('input', calc);
+  });
+  calc();
+})();
+
+// 顶部导航：随滚动高亮当前章节 + 点击即时选中
+(function(){
+  var toc = document.getElementById('toc');
+  if(!toc) return;
+  var links = Array.prototype.slice.call(toc.querySelectorAll('a'));
+  var items = links.map(function(a){
+    return { link:a, sec:document.getElementById(a.getAttribute('href').slice(1)) };
+  }).filter(function(it){ return it.sec; });
+  if(!items.length) return;
+
+  function setActive(link){
+    links.forEach(function(a){ a.classList.toggle('active', a === link); });
+    if(link){
+      var lr = link.getBoundingClientRect(), tr = toc.getBoundingClientRect();
+      if(lr.left < tr.left || lr.right > tr.right){
+        toc.scrollTo({ left: link.offsetLeft - (toc.clientWidth - link.offsetWidth)/2, behavior:'smooth' });
+      }
+    }
+  }
+  function sync(){
+    var line = 130, current = null;
+    items.forEach(function(it){
+      if(it.sec.getBoundingClientRect().top <= line) current = it.link;
+    });
+    if(window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2){
+      current = links[links.length-1];
+    }
+    if(!current) current = links[0];
+    setActive(current);
+  }
+  links.forEach(function(a){ a.addEventListener('click', function(){ setActive(a); }); });
+  window.addEventListener('scroll', sync, { passive:true });
+  window.addEventListener('resize', sync);
+  sync();
+})();
+</script>
+</body>
+</html>

@@ -82,7 +82,11 @@
     var cw = w - padL - padR, ch = h - padT - padB;
     ctx.clearRect(0, 0, w, h);
     // 网格
+<<<<<<< HEAD
     ctx.strokeStyle = 'rgba(20,22,28,0.06)';
+=======
+    ctx.strokeStyle = 'rgba(240,240,245,0.08)';
+>>>>>>> d9be22d (update)
     ctx.lineWidth = 1;
     ctx.setLineDash([2, 4]);
     for (var i = 0; i <= 4; i++) {
@@ -92,10 +96,17 @@
     ctx.setLineDash([]);
     // 软保底线
     var sx = padL + cw * (SOFT - 1) / (N - 1);
+<<<<<<< HEAD
     ctx.strokeStyle = 'rgba(201,138,27,0.35)';
     ctx.beginPath(); ctx.moveTo(sx, padT); ctx.lineTo(sx, padT + ch); ctx.stroke();
     // 累计曲线
     ctx.strokeStyle = '#4050E0';
+=======
+    ctx.strokeStyle = 'rgba(217,160,58,0.45)';
+    ctx.beginPath(); ctx.moveTo(sx, padT); ctx.lineTo(sx, padT + ch); ctx.stroke();
+    // 累计曲线
+    ctx.strokeStyle = '#7C8AFF';
+>>>>>>> d9be22d (update)
     ctx.lineWidth = 2;
     ctx.beginPath();
     for (var n = 1; n <= N; n++) {
@@ -107,10 +118,17 @@
     // 当前位置
     var px = padL + cw * Math.min(pity, N - 1) / (N - 1);
     var py = padT + ch * (1 - cum(Math.min(pity, N)));
+<<<<<<< HEAD
     ctx.fillStyle = '#C98A1B';
     ctx.beginPath(); ctx.arc(px, py, 3.5, 0, Math.PI * 2); ctx.fill();
     // 坐标标签
     ctx.fillStyle = '#5C6272';
+=======
+    ctx.fillStyle = '#D9A03A';
+    ctx.beginPath(); ctx.arc(px, py, 3.5, 0, Math.PI * 2); ctx.fill();
+    // 坐标标签
+    ctx.fillStyle = '#A0A3B1';
+>>>>>>> d9be22d (update)
     ctx.font = '10px sans-serif';
     ctx.fillText('1', padL, h - 4);
     ctx.fillText(String(SOFT), padL + cw * (SOFT - 1) / (N - 1) - 8, h - 4);

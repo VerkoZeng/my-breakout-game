@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>《放置三国》战斗数值逆向拆解 · 从面板到伤害结算</title>
+<style>
+:root{
+  --bg:#12141a; --bg2:#181b23; --panel:#1e222c; --panel2:#232833;
+  --line:#2e3442; --line2:#3b4354;
+  --tx:#e8eaef; --tx2:#a8b0c0; --tx3:#727c8e;
+  --acc:#d9b06a; --acc2:#e8c98a;
+  --blue:#6aa9e0; --purple:#a98fd8; --red:#e07a70; --green:#6fc08a;
+  --r:10px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; padding-top:54px; background:var(--bg); color:var(--tx);
+  font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",system-ui,sans-serif;
+  font-size:15px; line-height:1.75;
+}
+.wrap{max-width:900px; margin:0 auto; padding:34px 26px 80px}
+code{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  background:#2a2f3c; padding:1px 5px; border-radius:4px; font-size:.88em;
+  color:var(--acc2); white-space:nowrap}
+h1{font-size:29px; margin:0 0 8px; letter-spacing:.5px}
+h2{font-size:21px; margin:52px 0 14px; padding-bottom:9px; border-bottom:1px solid var(--line2);
+  scroll-margin-top:74px}
+h2 .n{color:var(--acc); font-family:"SFMono-Regular",Consolas,monospace; margin-right:10px}
+h3{font-size:16px; margin:26px 0 10px; color:var(--acc2)}
+p{margin:11px 0}
+.sub{color:var(--tx2); font-size:14px; margin:0 0 22px}
+.lead{background:var(--panel); border-left:3px solid var(--acc); border-radius:0 var(--r) var(--r) 0;
+  padding:16px 20px; margin:20px 0 26px}
+.lead b{color:var(--acc2)}
+/* 固定顶部导航：左 eyebrow / 右 toc */
+.topbar{position:fixed; top:0; left:0; right:0; z-index:100;
+  background:rgba(18,20,26,.9); border-bottom:1px solid var(--line);
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px)}
+.topbar .inner{max-width:900px; margin:0 auto; padding:0 clamp(10px,2.6vw,26px); height:54px;
+  display:flex; align-items:center; justify-content:space-between; gap:clamp(8px,1.7vw,16px)}
+.topbar .eyebrow{flex:none; white-space:nowrap; color:var(--acc); letter-spacing:.2em;
+  font-size:clamp(10.5px,1.35vw,12.5px); transition:font-size .2s}
+.toc{display:flex; flex-wrap:nowrap; gap:clamp(3px,.7vw,7px); margin:0; min-width:0;
+  overflow-x:auto; scrollbar-width:none; scroll-behavior:smooth}
+.toc::-webkit-scrollbar{display:none}
+.toc a{flex:none; display:inline-flex; align-items:baseline; gap:5px;
+  border:1px solid var(--line); border-radius:20px; padding:3px clamp(5px,1.1vw,11px);
+  font-size:clamp(10.5px,1.32vw,12.3px); color:var(--tx2); text-decoration:none;
+  background:var(--bg2); white-space:nowrap;
+  transition:border-color .15s,color .15s,background .15s,padding .2s,font-size .2s}
+.toc a::before{content:attr(data-n); color:var(--acc); font-weight:700; opacity:.9;
+  font-family:"SFMono-Regular",Consolas,monospace; font-size:.92em}
+.toc a:hover{border-color:rgba(106,169,224,.55); color:var(--blue)}
+.toc a.active{border-color:rgba(217,176,106,.65); color:var(--acc2); background:rgba(217,176,106,.12)}
+.toc a.active::before{opacity:1}
+.pill{display:inline-block; background:rgba(217,176,106,.13); color:var(--acc2);
+  border:1px solid rgba(217,176,106,.3); border-radius:14px; padding:2px 11px;
+  font-size:12px; margin-right:7px}
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(158px,1fr)); gap:12px; margin:22px 0}
+.stat{background:var(--panel); border:1px solid var(--line); border-radius:var(--r); padding:15px 16px}
+.stat .v{font-size:25px; font-weight:700; color:var(--acc2); font-family:"SFMono-Regular",Consolas,monospace}
+.stat .l{font-size:12.5px; color:var(--tx3); margin-top:3px}
+table{width:100%; border-collapse:collapse; margin:16px 0; font-size:13.5px}
+th,td{padding:8px 11px; border-bottom:1px solid var(--line); text-align:left}
+th{color:var(--acc); font-weight:600; background:var(--panel); font-size:12.5px;
+  white-space:nowrap}
+td.n{font-family:"SFMono-Regular",Consolas,monospace; text-align:right; white-space:nowrap}
+tr:hover td{background:rgba(255,255,255,.022)}
+figure{margin:22px 0; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--r); padding:18px 16px 14px}
+figure svg{display:block; width:100%; height:auto}
+figcaption{color:var(--tx3); font-size:12.5px; margin-top:11px; text-align:center}
+.box{background:var(--panel); border:1px solid var(--line); border-radius:var(--r); padding:18px 20px; margin:18px 0}
+.box.warn{border-left:3px solid var(--red)}
+.box.ok{border-left:3px solid var(--green)}
+.box.info{border-left:3px solid var(--blue)}
+dl{margin:0}
+dl>dt{display:inline-block; min-width:112px; background:rgba(217,176,106,.13);
+  color:var(--acc2); border-radius:5px; padding:1px 10px; font-size:12.5px;
+  margin:4px 14px 6px 0; font-weight:600}
+dl>dd{display:inline; margin:0 0 8px; line-height:1.68}
+dl>dd::after{content:""; display:block}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr} .topbar .eyebrow{letter-spacing:.12em}}
+.calc{background:var(--panel2); border:1px solid var(--line2); border-radius:var(--r); padding:20px}
+.calc .inrow{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:16px}
+.calc label{display:block; font-size:12.5px; color:var(--tx3); margin-bottom:4px}
+.calc input{width:100%; background:#12151c; border:1px solid var(--line2); color:var(--tx);
+  border-radius:6px; padding:8px 10px; font-size:14px; font-family:"SFMono-Regular",Consolas,monospace}
+.calc input:focus{outline:none; border-color:var(--acc)}
+.calc .out{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:11px; margin:16px 0}
+.calc .o{background:#12151c; border:1px solid var(--line); border-radius:8px; padding:11px 13px}
+.calc .o .k{font-size:11.5px; color:var(--tx3)}
+.calc .o .x{font-size:19px; font-family:"SFMono-Regular",Consolas,monospace; color:var(--acc2); margin-top:2px}
+.verdict{background:#12151c; border-left:3px solid var(--acc); border-radius:0 8px 8px 0;
+  padding:13px 16px; font-size:14px; line-height:1.7}
+.legend{display:flex; flex-wrap:wrap; gap:14px; margin:4px 0 10px; font-size:12.5px; color:var(--tx2)}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.legend i{width:15px; height:3px; border-radius:2px; display:inline-block}
+.steps{display:grid; gap:12px; margin:20px 0}
+.step{background:var(--panel); border:1px solid var(--line); border-radius:var(--r);
+  padding:15px 18px; display:flex; gap:14px; align-items:flex-start}
+.step .i{flex:0 0 30px; height:30px; border-radius:50%; background:rgba(217,176,106,.15);
+  color:var(--acc2); display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:14px; font-family:"SFMono-Regular",Consolas,monospace}
+.step .body{flex:1}
+.step .body>b{display:block; font-size:14.5px; color:#fff; margin-bottom:3px}
+.step .body span{color:var(--tx2); font-size:14px}
+.formula{background:#12151c; border:1px solid var(--line); border-radius:8px;
+  padding:13px 16px; margin:12px 0; font-family:"SFMono-Regular",Consolas,monospace;
+  font-size:13px; color:var(--acc2); overflow-x:auto; line-height:1.9}
+.formula small{display:block; color:var(--tx3); font-family:inherit; font-size:12px; margin-top:5px}
+.note{color:var(--tx3); font-size:12.5px; margin:9px 0}
+.tag{display:inline-block; font-size:12px; letter-spacing:.14em;
+  background:rgba(217,176,106,.13); color:var(--acc2);
+  border:1px solid rgba(217,176,106,.3); border-radius:14px; padding:3px 12px; margin-bottom:14px}
+.tags{display:flex; flex-wrap:wrap; gap:8px; margin:18px 0}
+.tags a{background:var(--panel); border:1px solid var(--line); color:var(--tx2);
+  padding:6px 14px; border-radius:8px; font-size:13px; text-decoration:none}
+.tags a:hover{border-color:var(--acc); color:var(--acc2)}
+footer{margin-top:56px; padding-top:20px; border-top:1px solid var(--line);
+  color:var(--tx3); font-size:12.5px; line-height:1.9}
+.tag-s2{background:rgba(224,122,112,.16); color:#ef9a91; border:1px solid rgba(224,122,112,.3)}
+.tag-s3{background:rgba(217,176,106,.14); color:var(--acc2); border:1px solid rgba(217,176,106,.3)}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="inner">
+    <div class="eyebrow">FZSG · </div>
+    <div class="toc" id="toc">
+      <a href="#chain" data-n="1">伤害链路</a>
+      <a href="#curve" data-n="2">防御压制曲线</a>
+      <a href="#k598" data-n="3">防御常量 598</a>
+      <a href="#panel" data-n="4">防御价值之谜</a>
+      <a href="#tower" data-n="5">炼狱塔难度</a>
+      <a href="#calc" data-n="6">计算器</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<span class="tag">放置三国 · 战斗数值</span>
+<p class="sub">从面板四属性到伤害结算 · 一条链路走完四款公式 · 全部数字由脚本复算</p>
+
+<div class="lead">
+  <b>一句话结果：</b>作者的《模型演算.xlsm》里留了一条「放三」伤害模型
+  ——<code>伤害 = 攻击 × (1 − 防御/(防御 + 等级×2 + 598))</code>。代入
+  <b>57 名 5 星 100 级面板</b>，防御免伤率全部落在 <b>46.7% ~ 50.5%</b>（中位 48.98%），
+  极差仅 <b>3.80 个百分点</b>。解释了防御面板异常：
+  防御面板值只有七百多，是因为它<b>本来就是减伤率分子</b>，不是减伤数值。
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="v">188</div><div class="l">条复核点 · FAIL 0</div></div>
+  <div class="stat"><div class="v">60</div><div class="l">行模型算例 · 4 款公式</div></div>
+  <div class="stat"><div class="v">48.98%</div><div class="l">57 名防御免伤中位</div></div>
+  <div class="stat"><div class="v">3.80pp</div><div class="l">免伤率极差</div></div>
+  <div class="stat"><div class="v">2.79×</div><div class="l">四公式伤害极差</div></div>
+</div>
+
+<!-- ========================================================= 伤害链路 -->
+<h2 id="chain"><span class="n">1</span>伤害链路</h2>
+
+<p>《模型演算.xlsm》的「伤害」页列出了4款游戏的伤害公式，共用同一组模拟输入（攻方攻击、技能伤害系数、条件收益系数、
+贯穿系数、英雄等级、守方防御），输出各自的伤害值。</p>
+
+<p>放三的完整结构：</p>
+
+<div class="steps">
+  <div class="step"><div class="i">1</div><div class="body">
+    <b>有效生命</b><span>面板生命 × (1 + 阵容加成 + buff) —— buff 含增益与减益</span></div></div>
+  <div class="step"><div class="i">2</div><div class="body">
+    <b>有效攻击</b><span>面板攻击 × (1 + 阵容加成 + buff) —— <em style="color:var(--acc2);font-style:normal">不减防御</em>，防御走独立的免伤通道</span></div></div>
+  <div class="step"><div class="i">3</div><div class="body">
+    <b>条件收益系数</b><span>1 + 攻方对职业增伤 − 守方对职业免伤 + 攻方增伤 − 守方免伤</span></div></div>
+  <div class="step"><div class="i">4</div><div class="body">
+    <b>类型伤害系数</b><span>法术伤害 = 攻方法伤 − 守方法免；物理伤害 = 攻方物伤 − 守方物免</span></div></div>
+  <div class="step"><div class="i">5</div><div class="body">
+    <b>属性类型系数</b><span>属性克制 +0.3 ／ 非属性克制 0 ／ 逆属性克制 0（阵营克制，<em style="color:var(--acc2);font-style:normal">加算</em>进括号）</span></div></div>
+  <div class="step"><div class="i">6</div><div class="body">
+    <b>防御免伤</b><span>有效防御 ÷ (有效防御 + 英雄等级 × 2 + <b style="color:var(--acc)">常量 598</b>) —— 乘法型</span></div></div>
+  <div class="step"><div class="i">7</div><div class="body">
+    <b>打击类型系数</b><span>普通 1 ／ 暴击走「攻方暴击 − 守方抗暴」与「暴伤 = 攻方暴伤 − 守方韧性」</span></div></div>
+</div>
+
+<div class="formula">
+伤害 = 攻方有效攻击 × 技能伤害系数 × （条件收益系数 <b>+</b> 类型伤害系数 <b>+</b> 属性类型系数） × (1 − 守方防御免伤) × 打击类型系数
+<small>注意第 3 步：括号内三项是<b>相加</b>，不是相乘 —— 属性克制 0.3 是「加 0.3」而不是「乘 1.3」。</small>
+</div>
+
+<div class="box info">
+<dl>
+<dt>为什么重要</dt><dd>这套结构里，防御<b>不参与有效攻击的扣减</b>，而是通过独立的「防御免伤」通道乘上去。
+这与萌萌（防御直接从有效攻击里减）构成两种完全不同的防御语义。
+</dd>
+</dl>
+</div>
+
+<!-- ========================================================= 防御压制曲线 -->
+<h2 id="curve"><span class="n">2</span>防御压制曲线</h2>
+
+<p>把四款公式都改写成「防御压制率 = 1 − 伤害 ÷ 无防御伤害」，固定攻方攻击 10800、等级 237、
+贯穿系数 0.5，得到四条可直接叠加的曲线：</p>
+
+<figure>
+  <svg viewBox="0 0 680 270" role="img" aria-label="四款游戏防御压制率曲线对比">
+  <line x1="50" y1="215.0" x2="640" y2="215.0" stroke="#2e3442" stroke-width="1"/>
+  <text x="44" y="219.0" fill="#727c8e" font-size="11" text-anchor="end">0%</text>
+  <line x1="50" y1="166.0" x2="640" y2="166.0" stroke="#2e3442" stroke-width="1"/>
+  <text x="44" y="170.0" fill="#727c8e" font-size="11" text-anchor="end">25%</text>
+  <line x1="50" y1="117.0" x2="640" y2="117.0" stroke="#2e3442" stroke-width="1"/>
+  <text x="44" y="121.0" fill="#727c8e" font-size="11" text-anchor="end">50%</text>
+  <line x1="50" y1="68.0" x2="640" y2="68.0" stroke="#2e3442" stroke-width="1"/>
+  <text x="44" y="72.0" fill="#727c8e" font-size="11" text-anchor="end">75%</text>
+  <line x1="50" y1="19.0" x2="640" y2="19.0" stroke="#2e3442" stroke-width="1"/>
+  <text x="44" y="23.0" fill="#727c8e" font-size="11" text-anchor="end">100%</text>
+  <line x1="50.0" y1="19" x2="50.0" y2="215" stroke="#2e3442" stroke-width="1" stroke-dasharray="3 4"/>
+  <text x="50.0" y="232" fill="#727c8e" font-size="11" text-anchor="middle">0</text>
+  <line x1="197.5" y1="19" x2="197.5" y2="215" stroke="#2e3442" stroke-width="1" stroke-dasharray="3 4"/>
+  <text x="197.5" y="232" fill="#727c8e" font-size="11" text-anchor="middle">300</text>
+  <line x1="345.0" y1="19" x2="345.0" y2="215" stroke="#2e3442" stroke-width="1" stroke-dasharray="3 4"/>
+  <text x="345.0" y="232" fill="#727c8e" font-size="11" text-anchor="middle">600</text>
+  <line x1="492.5" y1="19" x2="492.5" y2="215" stroke="#2e3442" stroke-width="1" stroke-dasharray="3 4"/>
+  <text x="492.5" y="232" fill="#727c8e" font-size="11" text-anchor="middle">900</text>
+  <line x1="640.0" y1="19" x2="640.0" y2="215" stroke="#2e3442" stroke-width="1" stroke-dasharray="3 4"/>
+  <text x="640.0" y="232" fill="#727c8e" font-size="11" text-anchor="middle">1200</text>
+  <text x="345" y="249" fill="#727c8e" font-size="11.5" text-anchor="middle">守方防御面板值</text>
+  <rect x="394.2" y="137.6" width="56.5" height="-7.2" fill="#d9b06a" opacity=".14"/>
+  <line x1="422.4" y1="19" x2="422.4" y2="215" stroke="#d9b06a" stroke-width="1.4" stroke-dasharray="5 4"/>
+  <text x="422.4" y="12.0" fill="#d9b06a" font-size="11" text-anchor="middle">防御带</text>
+  <text x="628.0" y="167.2" fill="#6aa9e0" font-size="11.5" text-anchor="end">萌萌 11.11%</text>
+  <text x="628.0" y="133.5" fill="#d9b06a" font-size="11.5" text-anchor="end">放三 52.82%</text>
+  <text x="628.0" y="183.2" fill="#6fc08a" font-size="11.5" text-anchor="end">姜饼人 7.04%</text>
+  <text x="628.0" y="58.3" fill="#a98fd8" font-size="11.5" text-anchor="end">第七史诗 66.67%</text>
+  <polyline fill="none" stroke="#6aa9e0" stroke-width="2.2" points="59.8,214.6 69.7,214.3 79.5,213.9 89.3,213.5 99.2,213.2 109.0,212.8 118.8,212.5 128.7,212.1 138.5,211.7 148.3,211.4 158.2,211.0 168.0,210.6 177.8,210.3 187.7,209.9 197.5,209.6 207.3,209.2 217.2,208.8 227.0,208.5 236.8,208.1 246.7,207.7 256.5,207.4 266.3,207.0 276.2,206.7 286.0,206.3 295.8,205.9 305.7,205.6 315.5,205.2 325.3,204.8 335.2,204.5 345.0,204.1 354.8,203.7 364.7,203.4 374.5,203.0 384.3,202.7 394.2,202.3 404.0,201.9 413.8,201.6 423.7,201.2 433.5,200.8 443.3,200.5 453.2,200.1 463.0,199.8 472.8,199.4 482.7,199.0 492.5,198.7 502.3,198.3 512.2,197.9 522.0,197.6 531.8,197.2 541.7,196.9 551.5,196.5 561.3,196.1 571.2,195.8 581.0,195.4 590.8,195.0 600.7,194.7 610.5,194.3 620.3,193.9 630.2,193.6 640.0,193.2"/>
+  <polyline fill="none" stroke="#d9b06a" stroke-width="2.6" points="59.8,211.4 69.7,207.9 79.5,204.6 89.3,201.4 99.2,198.3 109.0,195.3 118.8,192.4 128.7,189.5 138.5,186.8 148.3,184.2 158.2,181.6 168.0,179.1 177.8,176.7 187.7,174.4 197.5,172.1 207.3,169.9 217.2,167.8 227.0,165.7 236.8,163.7 246.7,161.7 256.5,159.8 266.3,158.0 276.2,156.1 286.0,154.4 295.8,152.7 305.7,151.0 315.5,149.3 325.3,147.7 335.2,146.2 345.0,144.7 354.8,143.2 364.7,141.7 374.5,140.3 384.3,138.9 394.2,137.6 404.0,136.2 413.8,135.0 423.7,133.7 433.5,132.5 443.3,131.2 453.2,130.1 463.0,128.9 472.8,127.8 482.7,126.6 492.5,125.5 502.3,124.5 512.2,123.4 522.0,122.4 531.8,121.4 541.7,120.4 551.5,119.4 561.3,118.5 571.2,117.6 581.0,116.6 590.8,115.7 600.7,114.9 610.5,114.0 620.3,113.1 630.2,112.3 640.0,111.5"/>
+  <polyline fill="none" stroke="#6fc08a" stroke-width="2.2" points="59.8,214.8 69.7,214.5 79.5,214.3 89.3,214.0 99.2,213.8 109.0,213.5 118.8,213.3 128.7,213.0 138.5,212.8 148.3,212.6 158.2,212.3 168.0,212.1 177.8,211.8 187.7,211.6 197.5,211.4 207.3,211.1 217.2,210.9 227.0,210.6 236.8,210.4 246.7,210.2 256.5,209.9 266.3,209.7 276.2,209.5 286.0,209.2 295.8,209.0 305.7,208.8 315.5,208.5 325.3,208.3 335.2,208.1 345.0,207.9 354.8,207.6 364.7,207.4 374.5,207.2 384.3,206.9 394.2,206.7 404.0,206.5 413.8,206.3 423.7,206.0 433.5,205.8 443.3,205.6 453.2,205.4 463.0,205.1 472.8,204.9 482.7,204.7 492.5,204.5 502.3,204.2 512.2,204.0 522.0,203.8 531.8,203.6 541.7,203.4 551.5,203.2 561.3,202.9 571.2,202.7 581.0,202.5 590.8,202.3 600.7,202.1 610.5,201.8 620.3,201.6 630.2,201.4 640.0,201.2"/>
+  <polyline fill="none" stroke="#a98fd8" stroke-width="2.2" points="59.8,208.7 69.7,202.8 79.5,197.2 89.3,191.9 99.2,187.0 109.0,182.3 118.8,177.9 128.7,173.7 138.5,169.8 148.3,166.0 158.2,162.4 168.0,159.0 177.8,155.7 187.7,152.6 197.5,149.7 207.3,146.8 217.2,144.1 227.0,141.5 236.8,139.0 246.7,136.6 256.5,134.3 266.3,132.1 276.2,129.9 286.0,127.9 295.8,125.9 305.7,124.0 315.5,122.2 325.3,120.4 335.2,118.7 345.0,117.0 354.8,115.4 364.7,113.8 374.5,112.3 384.3,110.9 394.2,109.5 404.0,108.1 413.8,106.8 423.7,105.5 433.5,104.2 443.3,103.0 453.2,101.8 463.0,100.7 472.8,99.5 482.7,98.5 492.5,97.4 502.3,96.4 512.2,95.4 522.0,94.4 531.8,93.4 541.7,92.5 551.5,91.6 561.3,90.7 571.2,89.8 581.0,89.0 590.8,88.2 600.7,87.4 610.5,86.6 620.3,85.8 630.2,85.1 640.0,84.3"/>
+  </svg>
+  <figcaption>防御压制率 = 1 − 实际伤害 ÷ 无防御伤害 ｜ 固定攻击 10800、等级 237、贯穿 0.5 ｜ 源表 60 行算例区间</figcaption>
+</figure>
+
+<div class="legend">
+  <span><i style="background:#d9b06a"></i>放三 · 乘法型</span>
+  <span><i style="background:#6aa9e0"></i>萌萌 · 减法型</span>
+  <span><i style="background:#6fc08a"></i>姜饼人 · 乘法型</span>
+  <span><i style="background:#a98fd8"></i>第七史诗 · 除法型</span>
+</div>
+
+<div class="box info">
+<dl>
+<dt>曲线形状</dt><dd>
+<b>放三</b>是典型的双曲衰减 —— 边际效应随防御单调递减，永不归零：防御 20 → 50.53%？不，防御 20 时压制率仅
+<b>1.83%</b>，到防御 1200 才涨到 <b>52.82%</b>。<br>
+<b>萌萌</b>是直线 —— 压制率就是 <code>防御 ÷ 攻击</code>，防御 1200 对攻击 10800 只有 11.11%，
+因为减法型在绝对值上「硬扣」，防御再高也只是线性加法。<br>
+<b>姜饼人</b>几乎是贴地的平线（末行 7.04%）—— 分母里等级系数 40 与常量 6371 太大，
+防御在整个数值区间里都推不动分母。<br>
+<b>第七史诗</b>最陡（末行 66.67%）—— 防御直接进分母且除以 300，几乎是「除法即压制」。
+</dd>
+</dl>
+</div>
+
+<div class="box warn">
+<dl>
+<dt>防御差异</dt><dd>
+同一条「防御 800」的约束，四款公式给出的压制率是：萌萌 7.41%、放三 42.74%、姜饼人 4.81%、第七史诗 57.14%。
+<b>差距近 12 倍。</b>任何「防御值多少」的结论，一旦离开具体公式就没有意义。
+</dd>
+</dl>
+</div>
+
+<!-- ========================================================= 防御常量 598 -->
+<h2 id="k598"><span class="n">3</span>防御常量 598：一个能被真实面板验证的数</h2>
+
+<p>放三公式的分母是 <code>防御 + 等级 × 2 + 598</code>。这里的 598 是作者对英雄按职业/阵营分类后，计算得出的一个具体数值：</p>
+
+<table>
+<thead><tr><th>检验项</th><th>结果</th><th>含义</th></tr></thead>
+<tbody>
+<tr><td>57 只英雄的防御免伤率区间</td><td class="n">46.73% ~ 50.53%</td><td>全部落在 4 个百分点的窄带里</td></tr>
+<tr><td>中位数</td><td class="n">48.98%</td><td>防御中位 766 ÷ (766 + 200 + 598)</td></tr>
+<tr><td>落在 [47%, 51%] 的英雄数</td><td class="n">55 / 57</td><td>另两只落在 46.73% 与 46.84%</td></tr>
+<tr><td>若要求中位恰为 50%，K 应为</td><td class="n">566</td><td>766 − 100×2；偏差 +5.65%</td></tr>
+</tbody>
+</table>
+
+<div class="lead">
+  <b>这不是巧合。</b>57 只英雄的职业、阵营、星级各不相同，防御面板值从 700 到 815 散布，
+  但代入这条公式后免伤率几乎完全一致 —— 说明 <b>598 这个取值与本作的防御量级是自洽的</b>：
+  它让「防御面板值」刚好落在「约五成减伤」的设计带里。
+</div>
+
+<figure>
+  <svg viewBox="0 0 680 268" role="img" aria-label="放三防御免伤曲线与57只真实面板分布">
+  <line x1="52" y1="199.3" x2="640" y2="199.3" stroke="#2e3442" stroke-width="1"/>
+  <text x="46" y="203.3" fill="#727c8e" font-size="11" text-anchor="end">40%</text>
+  <line x1="52" y1="157.7" x2="640" y2="157.7" stroke="#2e3442" stroke-width="1"/>
+  <text x="46" y="161.7" fill="#727c8e" font-size="11" text-anchor="end">45%</text>
+  <line x1="52" y1="116.0" x2="640" y2="116.0" stroke="#2e3442" stroke-width="1"/>
+  <text x="46" y="120.0" fill="#727c8e" font-size="11" text-anchor="end">50%</text>
+  <line x1="52" y1="74.3" x2="640" y2="74.3" stroke="#2e3442" stroke-width="1"/>
+  <text x="46" y="78.3" fill="#727c8e" font-size="11" text-anchor="end">55%</text>
+  <line x1="52" y1="32.7" x2="640" y2="32.7" stroke="#2e3442" stroke-width="1"/>
+  <text x="46" y="36.7" fill="#727c8e" font-size="11" text-anchor="end">60%</text>
+  <text x="52.0" y="233" fill="#727c8e" font-size="11" text-anchor="middle">500</text>
+  <text x="199.0" y="233" fill="#727c8e" font-size="11" text-anchor="middle">800</text>
+  <text x="346.0" y="233" fill="#727c8e" font-size="11" text-anchor="middle">1100</text>
+  <text x="493.0" y="233" fill="#727c8e" font-size="11" text-anchor="middle">1400</text>
+  <text x="640.0" y="233" fill="#727c8e" font-size="11" text-anchor="middle">1700</text>
+  <text x="346" y="249" fill="#727c8e" font-size="11.5" text-anchor="middle">守方防御面板值</text>
+  <rect x="150.0" y="114.5" width="56.3" height="20" fill="#6aa9e0" opacity=".16"/>
+<line x1="150.0" y1="20" x2="150.0" y2="216" stroke="#6aa9e0" stroke-width="1.5" stroke-dasharray="5 4"/>
+<line x1="206.3" y1="20" x2="206.3" y2="216" stroke="#6aa9e0" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="178.2" y="13.0" fill="#6aa9e0" font-size="11" text-anchor="middle">57 只真实面板（防 700~815）</text>
+  <polyline fill="none" stroke="#d9b06a" stroke-width="2.6" points="52.0,211.7 56.9,207.7 61.8,203.9 66.7,200.1 71.6,196.3 76.5,192.7 81.4,189.0 86.3,185.4 91.2,181.9 96.1,178.4 101.0,175.0 105.9,171.6 110.8,168.3 115.7,165.0 120.6,161.8 125.5,158.6 130.4,155.4 135.3,152.3 140.2,149.3 145.1,146.2 150.0,143.3 154.9,140.3 159.8,137.4 164.7,134.5 169.6,131.7 174.5,128.9 179.4,126.2 184.3,123.4 189.2,120.8 194.1,118.1 199.0,115.5 203.9,112.9 208.8,110.3 213.7,107.8 218.6,105.3 223.5,102.9 228.4,100.4 233.3,98.0 238.2,95.6 243.1,93.3 248.0,91.0 252.9,88.7 257.8,86.4 262.7,84.2 267.6,82.0 272.5,79.8 277.4,77.6 282.3,75.5 287.2,73.3 292.1,71.3 297.0,69.2 301.9,67.1 306.8,65.1 311.7,63.1 316.6,61.1 321.5,59.2 326.4,57.2 331.3,55.3 336.2,53.4 341.1,51.6 346.0,49.7 350.9,47.9 355.8,46.0 360.7,44.3 365.6,42.5 370.5,40.7 375.4,39.0 380.3,37.2 385.2,35.5 390.1,33.8 395.0,32.2 399.9,30.5 404.8,28.9 409.7,27.2 414.6,25.6 419.5,24.0 424.4,22.5 429.3,20.9 434.2,19.4 439.1,17.8 444.0,16.3 448.9,14.8 453.8,13.3 458.7,11.8 463.6,10.4 468.5,8.9 473.4,7.5 478.3,6.1 483.2,4.7 488.1,3.3 493.0,1.9 497.9,0.5 502.8,-0.8 507.7,-2.2 512.6,-3.5 517.5,-4.8 522.4,-6.2 527.3,-7.5 532.2,-8.7 537.1,-10.0 542.0,-11.3 546.9,-12.5 551.8,-13.8 556.7,-15.0 561.6,-16.2 566.5,-17.4 571.4,-18.6 576.3,-19.8 581.2,-21.0 586.1,-22.2 591.0,-23.4 595.9,-24.5 600.8,-25.6 605.7,-26.8 610.6,-27.9 615.5,-29.0 620.4,-30.1 625.3,-31.2 630.2,-32.3 635.1,-33.4 640.0,-34.5"/>
+  <circle cx="182.3" cy="124.5" r="4.5" fill="#6aa9e0"/>
+  <text x="192.3" y="140.5" fill="#6aa9e0" font-size="11.5" text-anchor="start">中位 48.98%（防 766）</text>
+  <text x="395.0" y="23.2" fill="#d9b06a" font-size="11.5" text-anchor="end">防御 1200 → 60.06%</text>
+  </svg>
+  <figcaption>放三防御免伤曲线（等级 100）｜ 蓝带为本作 57 只真实面板的落点区间</figcaption>
+</figure>
+
+<div class="box ok">
+<dl>
+<dt>两条可直接用的结论</dt><dd>
+<b>① 防御的边际效应会衰减，而且衰减得不快。</b>同样 +100 防御：基准防御 700 时免伤 +3.33pp，
+基准防御 1200 时只 +1.90pp —— 高防端拿到的效果是低防端的 <b>57.1%</b>（比值 1.75 倍）。
+在低防端堆防御的性价比明显更高。<br>
+<b>② 等级几乎不参与防御结算。</b>分母里的等级项 <code>等级 × 2</code> 只占 200/1564 = <b>12.79%</b>，
+升 1 级免伤只变 −0.0626pp。等级对「被减伤多少」几乎无影响，它走的是另一条线（攻击与生命成长）。
+</dd>
+</dl>
+</div>
+
+<!-- ========================================================= 防御价值之谜 -->
+<h2 id="panel"><span class="n">4</span>防御价值之谜：防御系数 50</h2>
+
+<p>《放置三国》解析.xlsx 的「英雄属性」页记录了 57 只 5 星 100 级英雄的面板四属性。
+最刺眼的一组对比：</p>
+
+<table>
+<thead><tr><th>属性</th><th>面板值（中位）</th><th>战力系数</th><th>战力贡献</th><th>在伤害公式里的角色</th></tr></thead>
+<tbody>
+<tr><td>生命</td><td class="n">12,957</td><td class="n">0.4</td><td class="n">5,183</td><td>有效生命 = 面板生命 ×(1+阵容+buff)</td></tr>
+<tr><td>攻击</td><td class="n">2,527</td><td class="n">2</td><td class="n">5,054</td><td>有效攻击 = 面板攻击 ×(1+阵容+buff)</td></tr>
+<tr><td><b>防御</b></td><td class="n">766</td><td class="n">50</td><td class="n">38,300</td><td><b>防御免伤率的分子</b></td></tr>
+<tr><td>速度</td><td class="n">713</td><td class="n">10</td><td class="n">7,130</td><td>—</td></tr>
+</tbody>
+</table>
+
+<div class="lead">
+  <b>防御面板值（766）比攻击（2,527）低 3.3 倍，却因为系数 50 而贡献了 7.4 倍于攻击的战力。</b>
+</div>
+
+<div class="box info">
+<dl>
+<dt>两套公式，两种角色</dt><dd>
+<b>战力公式</b>里防御是「加权乘数」—— 游戏中给它的系数高达 50，是在做<b>量纲对齐</b>：
+防御的原始量级只有七位数，系数小的话在加权和里根本看不见。<br>
+<b>伤害公式</b>里防御是「<b>减伤率分子</b>」—— 分母是 <code>防御 + 等级×2 + 598</code>，
+在 100 级时约为 1564，防御 766 占了 49%。<br>
+<b>两个口径不冲突。</b>七百多的防御值在伤害公式里是「约五成减伤」，
+在战力公式里配 50 的系数后是主要贡献项 —— <b>面板显示千位、战力贡献却大，二者并不矛盾</b>。
+</dd>
+</dl>
+</div>
+
+<p>5 星 100 级中位下 <code>防御 ÷ 攻击 = 0.29</code>，战力贡献里防御是攻击的 7.4 倍；
+而 6 星 361 级的神·赵云面板上 <code>防御 ÷ 攻击 = 0.0095</code>（5,567 ÷ 587,804），
+按同一系数算，防御贡献只有攻击的 <b>23.7%</b>。这条曲线本身合理（等级越高，攻击成长越猛），
+但它说明<b>「防御系数 50」这个单一常数在低等级与高等级两端的表现差异极大</b>，
+用它做跨等级比较会失真。</p>
+
+<!-- ========================================================= 炼狱塔难度 -->
+<h2 id="tower"><span class="n">5</span>炼狱塔 500 层：难度是怎么铺的</h2>
+
+<p>《放置三国》怪物阵容.xlsx 的「炼狱塔」页是本作关卡侧战斗数值。全量拆解后，结构是闭合的：</p>
+
+<table>
+<thead><tr><th>层级</th><th>结构</th><th>数值</th></tr></thead>
+<tbody>
+<tr><td>层数组织</td><td>每 10 层一阶</td><td class="n">50 阶 × 10 层 = 500 层</td></tr>
+<tr><td>阶内跨度</td><td>前 3 阶分别为 28 / 20 / 13 级</td><td class="n">每阶内部等差递进</td></tr>
+<tr><td>阶间回落</td><td>阶首比上一阶末级回落</td><td class="n">50 次回落全部存在</td></tr>
+<tr><td>后期阶首</td><td>从第 20 阶起恒定 +5</td><td class="n">形成稳定的等差台阶</td></tr>
+<tr><td>条件组合</td><td>严格 20 层一循环</td><td class="n">500 层只有 20 种不同机制组合</td></tr>
+<tr><td>条件1 种类</td><td>9 种阵容限制 × 两档 + 零阵亡</td><td class="n">19 种</td></tr>
+<tr><td>末层等级</td><td>第 500 层</td><td class="n">483 级</td></tr>
+</tbody>
+</table>
+
+<div class="box warn">
+<dl>
+<dt>难度的承接方式</dt><dd>
+塔的难度不是平滑爬升，而是<b>「10 层一个台阶 + 每 20 层换一次机制」</b>的双周期结构。
+条件组合 20 层一循环，意味着玩家在第 401 层会遇到和第 21 层完全相同的一组约束 ——
+<b>机制层是复用的，数值层是递进的</b>。
+</dd>
+</dl>
+</div>
+
+<!-- ========================================================= 计算器 -->
+<h2 id="calc"><span class="n">6</span>计算器</h2>
+
+<div class="calc">
+  <p>下面这个计算器跑的就是本页的公式。改任一输入，输出同步重算 —— 包括
+  <strong>「这一组面板下四款公式各给多少伤害」</strong>和
+  <strong>「防御该怎么堆才划算」</strong>两个判断。</p>
+
+  <div class="inrow">
+    <div><label>攻方攻击</label><input id="i-atk" type="number" value="2699"></div>
+    <div><label>守方防御</label><input id="i-def" type="number" value="778"></div>
+    <div><label>攻方等级</label><input id="i-lv" type="number" value="100"></div>
+    <div><label>技能伤害系数</label><input id="i-mul" type="number" value="1.5" step="0.1"></div>
+    <div><label>条件收益系数</label><input id="i-cond" type="number" value="1.5" step="0.1"></div>
+    <div><label>贯穿系数（第七史诗）</label><input id="i-pierce" type="number" value="0.5" step="0.1"></div>
+  </div>
+
+  <div class="out">
+    <div class="o"><div class="k">放三伤害</div><div class="x" id="o-t">—</div></div>
+    <div class="o"><div class="k">萌萌伤害</div><div class="x" id="o-s">—</div></div>
+    <div class="o"><div class="k">姜饼人伤害</div><div class="x" id="o-u">—</div></div>
+    <div class="o"><div class="k">第七史诗伤害</div><div class="x" id="o-v">—</div></div>
+    <div class="o"><div class="k">放三防御免伤</div><div class="x" id="o-mr">—</div></div>
+    <div class="o"><div class="k">四款伤害极差</div><div class="x" id="o-ratio">—</div></div>
+  </div>
+
+  <div class="verdict" id="o-verdict">—</div>
+
+  <p class="note" style="margin-top:14px">另有两条派生结论（随输入变化）：
+  <span id="o-marginal">—</span>　<span id="o-lvshare">—</span></p>
+</div>
+
+
+<footer>
+  更新时点：2026-11 ｜ 素材源：《放置三国》解析.xlsx、《放置三国》怪物阵容.xlsx、
+  《放置三国》数值模型.xlsx（14 页签）、《模型演算.xlsm》（伤害页 10 页签）<br>
+  本页所有数值结论均标注来源与置信度。
+</footer>
+
+</div>
+
+<script>
+(function(){
+  function num(id, dflt){
+    var v = parseFloat(document.getElementById(id).value);
+    return isFinite(v) ? v : dflt;
+  }
+  function fmt(x){
+    return Math.round(x).toLocaleString('en-US');
+  }
+  function pct(x, d){
+    return (x*100).toFixed(d===undefined?2:d) + '%';
+  }
+  function set(id, v){
+    var e = document.getElementById(id);
+    e.value = v;
+    e.dispatchEvent(new Event('input', {bubbles:true}));
+  }
+
+  var ids = ['i-atk','i-def','i-lv','i-mul','i-cond','i-pierce'];
+
+  function calc(){
+    var atk = num('i-atk', 0), def = num('i-def', 0), lv = num('i-lv', 0);
+    var mul = num('i-mul', 1), cond = num('i-cond', 1), pierce = num('i-pierce', 0.5);
+
+    var mrT = def / (def + lv*2 + 598);
+    var mrU = def / (def + lv*40 + 6371);
+    var dT = atk * (1 - mrT) * mul * cond;
+    var dS = Math.max(atk - def, 0) * mul * cond;
+    var dU = atk * (1 - mrU) * mul * cond;
+    var dV = atk * mul * cond / (def * pierce / 300 + 1);
+
+    document.getElementById('o-t').textContent = fmt(dT);
+    document.getElementById('o-s').textContent = fmt(dS);
+    document.getElementById('o-u').textContent = fmt(dU);
+    document.getElementById('o-v').textContent = fmt(dV);
+    document.getElementById('o-mr').textContent = pct(mrT);
+    var arr = [dT, dS, dU, dV];
+    var mx = Math.max.apply(null, arr), mn = Math.min.apply(null, arr);
+    document.getElementById('o-ratio').textContent = mn > 0 ? (mx/mn).toFixed(2) + '×' : '—';
+
+    // 防御边际：+100 防御带来的免伤增量（pp）
+    var t1 = def/(def + lv*2 + 598);
+    var t2 = (def+100)/((def+100) + lv*2 + 598);
+    document.getElementById('o-marginal').textContent =
+      '防御 +100 的免伤增量：' + ((t2-t1)*100).toFixed(2) + ' pp（基准防御 ' + Math.round(def) + '）';
+
+    // 等级项在分母里的占比
+    var denom = def + lv*2 + 598;
+    document.getElementById('o-lvshare').textContent =
+      '等级项占防御免伤分母：' + pct(lv*2/denom) + '（分母 ' + Math.round(denom) + '）';
+
+    // 判断句
+    var v = document.getElementById('o-verdict');
+    if (def > atk && atk > 0){
+      v.innerHTML = '守方防御 <em>' + Math.round(def) + '</em> 已超过攻方攻击 <em>' +
+        fmt(atk) + '</em>：萌萌的减法型会把有效攻击<b>压到 0</b>，其余三款仍有伤害。' +
+        '这类面板差只可能出现在跨养成段对拼里。';
+    } else if (pierce <= 0){
+      v.innerHTML = '贯穿系数为 0：第七史诗的除法型退化为「伤害 = 攻击 × 系数 × 系数」，' +
+        '<b>防御完全失效</b>。';
+    } else if (mn <= 0){
+      v.innerHTML = '本组输入下至少一款公式给出 0 伤害，四款极差无法计算。';
+    } else {
+      var best = '放三', bestV = dT;
+      if (dS > bestV){ best = '萌萌'; bestV = dS; }
+      if (dU > bestV){ best = '姜饼人'; bestV = dU; }
+      if (dV > bestV){ best = '第七史诗'; bestV = dV; }
+      var worst = '放三', worstV = dT;
+      if (dS < worstV){ worst = '萌萌'; worstV = dS; }
+      if (dU < worstV){ worst = '姜饼人'; worstV = dU; }
+      if (dV < worstV){ worst = '第七史诗'; worstV = dV; }
+      v.innerHTML = '本组面板下，<em>' + best + '</em> 伤害最高（' + fmt(bestV) + '），<em>' +
+        worst + '</em> 最低（' + fmt(worstV) + '），<b>相差 ' + (bestV/worstV).toFixed(2) +
+        ' 倍</b>。放三的防御免伤率为 ' + pct(mrT) + '。';
+    }
+  }
+
+  ids.forEach(function(id){
+    document.getElementById(id).addEventListener('input', calc);
+  });
+  calc();
+})();
+
+// 顶部导航：随滚动高亮当前章节 + 窄屏自动把当前胶囊滚入可视区
+(function(){
+  var toc = document.getElementById('toc');
+  if(!toc) return;
+  var links = Array.prototype.slice.call(toc.querySelectorAll('a'));
+  var items = links.map(function(a){
+    return { link:a, sec:document.getElementById(a.getAttribute('href').slice(1)) };
+  }).filter(function(it){ return it.sec; });
+  if(!items.length) return;
+
+  function setActive(link){
+    links.forEach(function(a){ a.classList.toggle('active', a === link); });
+    if(link){
+      var lr = link.getBoundingClientRect(), tr = toc.getBoundingClientRect();
+      if(lr.left < tr.left || lr.right > tr.right){
+        toc.scrollTo({ left: link.offsetLeft - (toc.clientWidth - link.offsetWidth)/2, behavior:'smooth' });
+      }
+    }
+  }
+  function sync(){
+    var line = 130, current = null;
+    items.forEach(function(it){
+      if(it.sec.getBoundingClientRect().top <= line) current = it.link;
+    });
+    if(window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2){
+      current = links[links.length-1];
+    }
+    if(!current) current = links[0];
+    setActive(current);
+  }
+  links.forEach(function(a){ a.addEventListener('click', function(){ setActive(a); }); });
+  window.addEventListener('scroll', sync, { passive:true });
+  window.addEventListener('resize', sync);
+  sync();
+})();
+</script>
+</body>
+</html>
