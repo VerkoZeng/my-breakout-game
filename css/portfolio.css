@@ -22,20 +22,6 @@
  * ========================================================================== */
 
 :root {
-<<<<<<< HEAD
-  --paper: #F4F6F8;
-  --paper-deep: #ECEEF2;
-  --ink: #14161C;
-  --ink-soft: #3A3F4B;
-  --muted: #5C6272;
-  --line: rgba(20, 22, 28, 0.1);
-  --line-soft: rgba(20, 22, 28, 0.055);
-  --indigo: #4050E0;
-  --indigo-soft: rgba(64, 80, 224, 0.08);
-  --amber: #C98A1B;
-  --amber-soft: rgba(201, 138, 27, 0.1);
-  --panel: rgba(255, 255, 255, 0.6);
-=======
   --paper: #1D1F27;
   --paper-deep: #24262F;
   --ink: #F0F0F5;
@@ -50,7 +36,6 @@
   --amber: #D9A03A;
   --amber-soft: rgba(217, 160, 58, 0.14);
   --panel: rgba(38, 40, 51, 0.62);
->>>>>>> d9be22d (update)
   --radius: 10px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --grid: 28px;
@@ -74,11 +59,7 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-<<<<<<< HEAD
-::selection { background: rgba(64, 80, 224, 0.16); }
-=======
 ::selection { background: rgba(124, 138, 255, 0.28); }
->>>>>>> d9be22d (update)
 
 a { color: inherit; text-decoration: none; }
 
@@ -99,11 +80,7 @@ header {
   position: sticky;
   top: 0;
   z-index: 20;
-<<<<<<< HEAD
-  background: rgba(244, 246, 248, 0.82);
-=======
   background: rgba(29, 31, 39, 0.82);
->>>>>>> d9be22d (update)
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line-soft);
@@ -113,12 +90,6 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-<<<<<<< HEAD
-  height: 60px;
-}
-
-.nav-name {
-=======
   gap: 24px;
   height: 60px;
 }
@@ -134,7 +105,6 @@ header .container {
 
 .nav-name {
   flex: none;
->>>>>>> d9be22d (update)
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -148,14 +118,6 @@ header .container {
 
 .nav-links {
   display: flex;
-<<<<<<< HEAD
-  gap: 28px;
-  font-size: 14px;
-  color: var(--ink-soft);
-}
-.nav-links a { padding: 4px 0; transition: color .2s var(--ease); }
-.nav-links a:hover { color: var(--indigo); }
-=======
   align-items: center;
   gap: 6px;
   font-size: 13.5px;
@@ -184,7 +146,6 @@ header .container {
   background: var(--indigo-soft);
   font-weight: 600;
 }
->>>>>>> d9be22d (update)
 
 /* ---------- Hero ---------- */
 .hero {
@@ -257,11 +218,7 @@ header .container {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 22px 24px 18px;
-<<<<<<< HEAD
-  box-shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 12px 30px rgba(20,22,28,.05);
-=======
   box-shadow: 0 1px 0 rgba(255, 255, 255, .06) inset, 0 12px 30px rgba(0, 0, 0, .35);
->>>>>>> d9be22d (update)
 }
 .chart-head {
   display: flex;
@@ -340,11 +297,7 @@ section { padding: 64px 0; }
   transform-origin: top;
   transition: transform .3s var(--ease);
 }
-<<<<<<< HEAD
-.work-row:hover { background: rgba(64, 80, 224, 0.035); }
-=======
 .work-row:hover { background: rgba(124, 138, 255, 0.07); }
->>>>>>> d9be22d (update)
 .work-row:hover::before { transform: scaleY(1); }
 
 .work-name { font-size: 18px; font-weight: 700; }
@@ -361,11 +314,7 @@ section { padding: 64px 0; }
 /* 描述内的细分条目：比正文小一号，作为要点罗列 */
 .work-desc .fine {
   font-size: 12.5px;
-<<<<<<< HEAD
-  color: #776e65;
-=======
   color: var(--muted);
->>>>>>> d9be22d (update)
   line-height: 1.8;
 }
 .work-metrics { text-align: right; }
@@ -391,11 +340,7 @@ section { padding: 64px 0; }
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 24px;
-<<<<<<< HEAD
-  box-shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 12px 30px rgba(20,22,28,.05);
-=======
   box-shadow: 0 1px 0 rgba(255, 255, 255, .06) inset, 0 12px 30px rgba(0, 0, 0, .35);
->>>>>>> d9be22d (update)
 }
 .game-head { margin-bottom: 16px; }
 .game-head h3 { font-size: 17px; font-weight: 700; }
@@ -426,13 +371,8 @@ section { padding: 64px 0; }
 .gs-card:hover {
   transform: translateY(-2px);
   border-color: var(--indigo);
-<<<<<<< HEAD
-  background: #fff;
-  box-shadow: 0 10px 24px rgba(20,22,28,.08);
-=======
   background: var(--paper-deep);
   box-shadow: 0 10px 24px rgba(0, 0, 0, .4);
->>>>>>> d9be22d (update)
 }
 .gs-card:active { transform: translateY(0); }
 .gs-card:focus-visible { outline: 2px solid var(--indigo); outline-offset: 2px; }
@@ -449,11 +389,7 @@ section { padding: 64px 0; }
   color: var(--indigo);
 }
 .gs-card.amber .gs-icon { background: var(--amber-soft); color: var(--amber); }
-<<<<<<< HEAD
-.gs-card.slate .gs-icon { background: rgba(20,22,28,.06); color: var(--ink-soft); }
-=======
 .gs-card.slate .gs-icon { background: rgba(240,240,245,.07); color: var(--ink-soft); }
->>>>>>> d9be22d (update)
 .gs-name { font-size: 15px; font-weight: 700; color: var(--ink); }
 .gs-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
 .gs-go {
@@ -511,11 +447,7 @@ section { padding: 64px 0; }
   font-size: 13px;
   font-variant-numeric: tabular-nums;
   color: var(--ink);
-<<<<<<< HEAD
-  background: #fff;
-=======
   background: var(--paper);
->>>>>>> d9be22d (update)
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 5px 7px;
@@ -544,11 +476,7 @@ section { padding: 64px 0; }
   font-size: 14px;
   font-weight: 600;
   color: var(--ink);
-<<<<<<< HEAD
-  background: #fff;
-=======
   background: var(--paper-deep);
->>>>>>> d9be22d (update)
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 9px 0;
@@ -557,13 +485,8 @@ section { padding: 64px 0; }
 }
 .btn:hover { border-color: var(--indigo); color: var(--indigo); }
 .btn:active { transform: translateY(1px); }
-<<<<<<< HEAD
-.btn.primary { background: var(--indigo); border-color: var(--indigo); color: #fff; }
-.btn.primary:hover { background: #3345D0; color: #fff; }
-=======
 .btn.primary { background: var(--indigo-solid); border-color: var(--indigo-solid); color: #fff; }
 .btn.primary:hover { background: #4E5CEB; border-color: #4E5CEB; color: #fff; }
->>>>>>> d9be22d (update)
 .btn.ghost { flex: 0 0 auto; padding: 9px 16px; color: var(--muted); }
 .btn.ghost:hover { color: var(--ink); border-color: var(--ink); }
 
@@ -682,11 +605,7 @@ section { padding: 64px 0; }
   line-height: 1.55;
   padding: 0 6px;
   border-radius: 4px;
-<<<<<<< HEAD
-  background: rgba(20, 22, 28, 0.045);
-=======
   background: rgba(240, 240, 245, 0.07);
->>>>>>> d9be22d (update)
 }
 .g-res .r { color: var(--ink-soft); }
 .g-res .sr { color: var(--indigo); font-weight: 700; background: var(--indigo-soft); }
@@ -721,11 +640,7 @@ section { padding: 64px 0; }
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
-<<<<<<< HEAD
-  background: #f4f6f8;
-=======
   background: #2B2D38;
->>>>>>> d9be22d (update)
   padding: 12px;
   border-radius: 12px;
   width: min(92vw, 340px);
@@ -737,11 +652,7 @@ section { padding: 64px 0; }
 }
 .game-2048-cell {
   aspect-ratio: 1;
-<<<<<<< HEAD
-  background: #fcfcfc66;
-=======
   background: rgba(255, 255, 255, 0.08);
->>>>>>> d9be22d (update)
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -812,32 +723,20 @@ footer {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 18px 12px 8px;
-<<<<<<< HEAD
-  box-shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 12px 30px rgba(20,22,28,.05);
-=======
   box-shadow: 0 1px 0 rgba(255, 255, 255, .06) inset, 0 12px 30px rgba(0, 0, 0, .35);
->>>>>>> d9be22d (update)
 }
 #radarChart { width: 100%; height: auto; max-width: 460px; margin: 0 auto; }
 
 .radar-ring { fill: none; stroke: var(--line-soft); stroke-width: 1; }
 .radar-axis { stroke: var(--line); stroke-width: 1; }
 .radar-area {
-<<<<<<< HEAD
-  fill: rgba(64, 80, 224, 0.13);
-=======
   fill: rgba(124, 138, 255, 0.22);
->>>>>>> d9be22d (update)
   stroke: var(--indigo);
   stroke-width: 2;
   stroke-linejoin: round;
 }
 .radar-dot {
-<<<<<<< HEAD
-  fill: #fff;
-=======
   fill: var(--paper);
->>>>>>> d9be22d (update)
   stroke: var(--indigo);
   stroke-width: 2.5;
 }
@@ -901,13 +800,8 @@ footer {
 }
 .cell:hover {
   transform: translateY(-2px);
-<<<<<<< HEAD
-  border-color: rgba(64, 80, 224, 0.4);
-  box-shadow: 0 10px 24px rgba(20,22,28,.06);
-=======
   border-color: var(--indigo-line);
   box-shadow: 0 10px 24px rgba(0, 0, 0, .35);
->>>>>>> d9be22d (update)
 }
 .cell h3 {
   font-size: 15.5px;
@@ -981,10 +875,6 @@ footer {
   .work-row { grid-template-columns: 1fr; gap: 10px; }
   .work-metrics { text-align: left; }
   .game-grid { grid-template-columns: 1fr; }
-<<<<<<< HEAD
-  .footer-grid { grid-template-columns: 1fr 1fr; }
-  .nav-links { gap: 18px; }
-=======
   /* 棋盘原为 width:min(92vw,340px)，按视口算宽而不看面板宽度，
      单列时会把 .game-panel 撑到 390px 以上，手机端整页横向滚动。 */
   .game-2048-board { width: 100%; max-width: 340px; }
@@ -993,7 +883,6 @@ footer {
   .pillar-grid img { width: 100%; height: auto; }
   .footer-grid { grid-template-columns: 1fr 1fr; }
   .nav-links { gap: 4px; }
->>>>>>> d9be22d (update)
   .radar-wrap { grid-template-columns: 1fr; gap: 24px; }
   .pillar-grid, .loop { grid-template-columns: 1fr 1fr; }
 }
